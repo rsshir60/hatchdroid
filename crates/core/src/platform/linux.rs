@@ -3,6 +3,7 @@ use std::io;
 use std::os::fd::AsRawFd;
 use std::path::Path;
 
+use super::unix::is_fuse_or_unsupported;
 pub use super::unix::{
     allocated_bytes, apply_mode, create_new_no_follow, create_symlink, name_problem,
     open_exclusive, open_existing_no_follow, path_len, same_filesystem, sync_dir,
@@ -17,19 +18,40 @@ pub const MAX_PATH_LEN: usize = 4095 - ".hatchzip-part".len();
 pub const SYNC_EACH_FILE: bool = false;
 
 pub fn sync_batch(output: &Path) -> io::Result<()> {
-    let f = File::open(output)?;
-    if unsafe { libc::syncfs(f.as_raw_fd()) } != 0 {
-        let err = io::Error::last_os_error();
-        match err.raw_os_error() {
-            Some(libc::ENOSYS | libc::EINVAL | libc::EPERM | libc::EOPNOTSUPP) => {
-                // FUSE / Android sandbox may not implement syncfs; sync the directory descriptor directly
-                let _ = f.sync_all();
+    #[cfg(target_os = "android")]
+    {
+        let _ = output;
+        // On Android, FUSE mounts (/storage/emulated/0) do not implement syncfs,
+        // and opening a directory with O_RDONLY without O_DIRECTORY returns ENOENT (os error 2).
+        // Android storage flushes via standard file closes.
+        Ok(())
+    }
+
+    #[cfg(not(target_os = "android"))]
+    {
+        let f = match File::open(output) {
+            Ok(f) => f,
+            Err(e) if is_fuse_or_unsupported(&e)
+                || e.kind() == io::ErrorKind::NotFound
+                || e.raw_os_error() == Some(libc::EISDIR)
+                || e.raw_os_error() == Some(libc::ENOTDIR) => {
                 return Ok(());
             }
-            _ => return Err(err),
+            Err(e) => return Err(e),
+        };
+        if unsafe { libc::syncfs(f.as_raw_fd()) } != 0 {
+            let err = io::Error::last_os_error();
+            match err.raw_os_error() {
+                Some(libc::ENOSYS | libc::EINVAL | libc::EPERM | libc::EOPNOTSUPP | libc::EBADF | libc::ENOENT) => {
+                    // FUSE / sandboxed environments may not implement syncfs; sync the directory descriptor directly
+                    let _ = f.sync_all();
+                    return Ok(());
+                }
+                _ => return Err(err),
+            }
         }
+        Ok(())
     }
-    Ok(())
 }
 
 /// Frees `len` bytes at `offset` without changing the file's length. Returns
@@ -51,7 +73,7 @@ pub fn punch_hole(file: &File, offset: u64, len: u64) -> io::Result<bool> {
         let e = io::Error::last_os_error();
         match e.raw_os_error() {
             Some(libc::EINTR) => continue,
-            Some(libc::EOPNOTSUPP | libc::ENOSYS) => return Ok(false),
+            Some(libc::EOPNOTSUPP | libc::ENOSYS | libc::EINVAL) => return Ok(false),
             _ => return Err(e),
         }
     }

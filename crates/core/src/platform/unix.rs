@@ -15,7 +15,7 @@ pub fn same_filesystem(a: &Path, b: &Path) -> bool {
 /// Returns true if an OS error indicates a filesystem limitation rather than a hard failure
 /// (e.g. Android FUSE or FAT32/exFAT mounts not supporting locks or permissions).
 #[inline]
-fn is_fuse_or_unsupported(err: &io::Error) -> bool {
+pub(crate) fn is_fuse_or_unsupported(err: &io::Error) -> bool {
     match err.raw_os_error() {
         Some(libc::ENOSYS | libc::EOPNOTSUPP | libc::EINVAL | libc::EACCES | libc::EPERM) => true,
         _ => false,
