@@ -9,10 +9,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import dev.hatchzip.android.ui.theme.EmeraldGreen
+import dev.hatchzip.android.ui.theme.*
 import dev.hatchzip.android.util.PermissionUtil
 
 @Composable
@@ -24,6 +26,7 @@ fun PermissionScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        containerColor = HatchBackground,
         contentWindowInsets = WindowInsets.safeDrawing
     ) { innerPadding ->
         Column(
@@ -35,77 +38,88 @@ fun PermissionScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Surface(
-                color = MaterialTheme.colorScheme.primaryContainer,
-                shape = RoundedCornerShape(28.dp),
-                modifier = Modifier.size(96.dp)
+                color = HatchPrimary.copy(alpha = 0.15f),
+                shape = RoundedCornerShape(24.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, HatchPrimary.copy(alpha = 0.3f)),
+                modifier = Modifier.size(88.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = Icons.Outlined.FolderShared,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(48.dp)
+                        tint = HatchPrimary,
+                        modifier = Modifier.size(44.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "HatchZip Needs Storage Access",
+                text = "HatchDroid Storage Access",
                 style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurface
+                color = TextPrimary
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = "Unlike standard extractors that duplicate files before deleting, HatchZip operates directly on disk: shrinking the archive from the tail as each file hatches.",
+                text = "Unlike standard extractors that duplicate files before deleting, HatchDroid operates in-place: shrinking the archive from the tail as each file hatches.",
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = TextSecondary
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
             Surface(
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                shape = RoundedCornerShape(16.dp),
+                color = Color(0xFF14141C),
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF222230)),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.padding(14.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Shield,
                         contentDescription = null,
                         tint = EmeraldGreen,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(22.dp)
                     )
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = "Requires All Files Access (MANAGE_EXTERNAL_STORAGE) to execute POSIX ftruncate and fallocate directly on your filesystem.",
+                        text = "Requires All Files Access (MANAGE_EXTERNAL_STORAGE) to execute POSIX ftruncate and fallocate directly on disk.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = TextSecondary
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(36.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             Button(
                 onClick = {
                     val intent = PermissionUtil.requestAllFilesAccessIntent(context)
                     context.startActivity(intent)
                 },
-                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = HatchPrimary,
+                    contentColor = Color(0xFF0A0A0C)
+                ),
+                shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(54.dp)
+                    .height(50.dp)
             ) {
-                Text("Grant All Files Access", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = "Grant All Files Access",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }

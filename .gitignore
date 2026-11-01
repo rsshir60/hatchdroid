@@ -12,3 +12,6 @@ local.properties
 *.jks
 *.apk
 *.aab
+/dist/
+*KEYSTORE_BASE64*
+*keystore*.txt

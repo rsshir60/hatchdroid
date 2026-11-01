@@ -29,10 +29,27 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file(System.getenv("KEYSTORE_PATH") ?: "release-keystore.jks")
-            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "hatchzip123"
-            keyAlias = System.getenv("KEY_ALIAS") ?: "hatchzip"
-            keyPassword = System.getenv("KEY_PASSWORD") ?: "hatchzip123"
+            val customPath = System.getenv("KEYSTORE_PATH")
+            val defaultKeystore = file("release-keystore.jks")
+            if (!customPath.isNullOrEmpty() && file(customPath).exists()) {
+                storeFile = file(customPath)
+                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "hatchzip123"
+                keyAlias = System.getenv("KEY_ALIAS") ?: "hatchzip"
+                keyPassword = System.getenv("KEY_PASSWORD") ?: "hatchzip123"
+            } else if (defaultKeystore.exists()) {
+                storeFile = defaultKeystore
+                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "hatchzip123"
+                keyAlias = System.getenv("KEY_ALIAS") ?: "hatchzip"
+                keyPassword = System.getenv("KEY_PASSWORD") ?: "hatchzip123"
+            } else {
+                val debugKeystore = file("${System.getProperty("user.home")}/.android/debug.keystore")
+                if (debugKeystore.exists()) {
+                    storeFile = debugKeystore
+                    storePassword = "android"
+                    keyAlias = "androiddebugkey"
+                    keyPassword = "android"
+                }
+            }
         }
     }
 

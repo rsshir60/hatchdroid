@@ -1,6 +1,8 @@
 package dev.hatchzip.android.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,12 +14,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import dev.hatchzip.android.ui.components.DualProgressCard
+import androidx.compose.ui.unit.sp
 import dev.hatchzip.android.ui.components.LiveExtractionTelemetryCard
 import dev.hatchzip.android.ui.components.PasswordPromptSheet
 import dev.hatchzip.android.ui.theme.*
-import dev.hatchzip.android.util.StorageUtil
 import dev.hatchzip.android.viewmodel.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,14 +34,16 @@ fun ExtractionScreen(
     val uiState by viewModel.uiState.collectAsState()
     val liveModel by viewModel.liveProgressState.collectAsState()
     var showAbortDialog by remember { mutableStateOf(false) }
+    var showDiagnostics by remember { mutableStateOf(false) }
 
-    // Intercept back button when extracting so user doesn't accidentally disconnect
+    // Intercept back button when extracting so user doesn't accidentally cancel
     BackHandler(enabled = uiState.phase == ExtractionUiPhase.Extracting) {
         showAbortDialog = true
     }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        containerColor = HatchBackground,
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             TopAppBar(
@@ -49,7 +55,9 @@ fun ExtractionScreen(
                             is ExtractionUiPhase.Paused -> "Extraction Paused"
                             else -> "In-Place Extraction"
                         },
-                        style = MaterialTheme.typography.titleLarge
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
                     )
                 },
                 navigationIcon = {
@@ -60,9 +68,16 @@ fun ExtractionScreen(
                             onNavigateBack()
                         }
                     }) {
-                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                            contentDescription = "Back",
+                            tint = TextSecondary
+                        )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = HatchBackground
+                )
             )
         }
     ) { innerPadding ->
@@ -70,7 +85,7 @@ fun ExtractionScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(16.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -78,6 +93,7 @@ fun ExtractionScreen(
                 is ExtractionUiPhase.Extracting, is ExtractionUiPhase.Paused -> {
                     val archiveName = uiState.selectedArchive?.displayName ?: "Archive"
 
+                    // Primary Live Telemetry Card
                     LiveExtractionTelemetryCard(
                         archiveName = archiveName,
                         mode = uiState.extractionMode,
@@ -88,44 +104,81 @@ fun ExtractionScreen(
                         onAbortClick = { showAbortDialog = true }
                     )
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
-                    // Detail telemetry card
-                    OutlinedCard(
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.fillMaxWidth()
+                    // Collapsible Technical Diagnostics
+                    Surface(
+                        color = Color(0xFF121218),
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF222230)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showDiagnostics = !showDiagnostics }
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = "Telemetry & Disk Operations",
-                                style = MaterialTheme.typography.titleSmall
-                            )
-                            Spacer(modifier = Modifier.height(10.dp))
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Terminal,
+                                        contentDescription = null,
+                                        tint = TextSecondary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Technical Diagnostics",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = TextPrimary
+                                    )
+                                }
+                                Icon(
+                                    imageVector = if (showDiagnostics) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                                    contentDescription = null,
+                                    tint = TextSecondary,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
 
-                            TelemetryRow(
-                                label = "Extraction Engine",
-                                value = "hatchzip-core (aarch64 POSIX)"
-                            )
-                            TelemetryRow(
-                                label = "Destination",
-                                value = uiState.outputDirectoryOverride ?: uiState.selectedArchive?.defaultOutputDir ?: "/storage/emulated/0"
-                            )
-                            TelemetryRow(
-                                label = "Verification Mode",
-                                value = if (uiState.verifyFirst) "Full Pre-Scan" else "Batch In-Flight"
-                            )
-                            TelemetryRow(
-                                label = "Truncation Primitives",
-                                value = "ftruncate + fallocate (ext4/f2fs)"
-                            )
+                            AnimatedVisibility(visible = showDiagnostics) {
+                                Column(modifier = Modifier.padding(top = 12.dp)) {
+                                    HorizontalDivider(thickness = 0.5.dp, color = Color(0xFF222230))
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    TelemetryRow(
+                                        label = "Native Engine",
+                                        value = "hatchzip-core (aarch64 POSIX)"
+                                    )
+                                    TelemetryRow(
+                                        label = "Target Directory",
+                                        value = uiState.outputDirectoryOverride ?: uiState.selectedArchive?.defaultOutputDir ?: "/storage/emulated/0"
+                                    )
+                                    TelemetryRow(
+                                        label = "Verification Mode",
+                                        value = if (uiState.verifyFirst) "Full Pre-Scan" else "Batch In-Flight"
+                                    )
+                                    TelemetryRow(
+                                        label = "Truncation Primitives",
+                                        value = "ftruncate + fallocate (ext4/f2fs)"
+                                    )
+                                    TelemetryRow(
+                                        label = "Cancellation Token",
+                                        value = "Arc<AtomicBool> cooperative"
+                                    )
+                                }
+                            }
                         }
                     }
                 }
 
                 is ExtractionUiPhase.Finished -> {
                     Surface(
-                        color = EmeraldGreenContainer,
-                        shape = RoundedCornerShape(24.dp),
+                        color = Color(0xFF0F1E17),
+                        shape = RoundedCornerShape(16.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, EmeraldGreen.copy(alpha = 0.3f)),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 24.dp)
@@ -137,20 +190,22 @@ fun ExtractionScreen(
                             Icon(
                                 imageVector = Icons.Outlined.CheckCircle,
                                 contentDescription = null,
-                                tint = EmeraldGreenText,
-                                modifier = Modifier.size(56.dp)
+                                tint = EmeraldGreen,
+                                modifier = Modifier.size(52.dp)
                             )
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(14.dp))
                             Text(
                                 text = "Hatched Successfully!",
-                                style = MaterialTheme.typography.headlineSmall,
-                                color = EmeraldGreenText
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = TextPrimary
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = "All ${uiState.selectedArchive?.itemCount ?: 0} files extracted. Source archive space was safely reclaimed with zero excess storage required.",
+                                text = "All ${uiState.selectedArchive?.itemCount ?: 0} entries extracted cleanly. Source archive storage was safely reclaimed with zero excess flash footprint.",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = EmeraldGreenText
+                                color = TextSecondary,
+                                modifier = Modifier.padding(horizontal = 8.dp)
                             )
 
                             Spacer(modifier = Modifier.height(24.dp))
@@ -158,11 +213,15 @@ fun ExtractionScreen(
                             Button(
                                 onClick = onNavigateBack,
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = EmeraldGreen
+                                    containerColor = EmeraldGreen,
+                                    contentColor = Color(0xFF0A0A0C)
                                 ),
-                                shape = RoundedCornerShape(12.dp)
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(46.dp)
                             ) {
-                                Text("Done", style = MaterialTheme.typography.titleMedium)
+                                Text("Done", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -170,8 +229,9 @@ fun ExtractionScreen(
 
                 is ExtractionUiPhase.Failed -> {
                     Surface(
-                        color = CoralRedContainer,
-                        shape = RoundedCornerShape(24.dp),
+                        color = Color(0xFF1E1014),
+                        shape = RoundedCornerShape(16.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, CoralRed.copy(alpha = 0.3f)),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 24.dp)
@@ -183,40 +243,52 @@ fun ExtractionScreen(
                             Icon(
                                 imageVector = Icons.Outlined.ErrorOutline,
                                 contentDescription = null,
-                                tint = CoralRedText,
-                                modifier = Modifier.size(56.dp)
+                                tint = CoralRed,
+                                modifier = Modifier.size(52.dp)
                             )
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(14.dp))
                             Text(
-                                text = "Extraction Failed",
-                                style = MaterialTheme.typography.headlineSmall,
-                                color = CoralRedText
+                                text = "Extraction Interrupted",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = TextPrimary
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = phase.message,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = CoralRedText
+                                color = CoralRedText,
+                                modifier = Modifier.padding(horizontal = 8.dp)
                             )
 
                             Spacer(modifier = Modifier.height(24.dp))
 
-                            Row {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
                                 OutlinedButton(
                                     onClick = onNavigateBack,
-                                    shape = RoundedCornerShape(12.dp)
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = TextSecondary),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(46.dp)
                                 ) {
-                                    Text("Back")
+                                    Text("Back", style = MaterialTheme.typography.labelLarge)
                                 }
-                                Spacer(modifier = Modifier.width(12.dp))
                                 Button(
                                     onClick = { viewModel.resumeExtraction() },
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = CoralRed
+                                        containerColor = CoralRed,
+                                        contentColor = Color.White
                                     ),
-                                    shape = RoundedCornerShape(12.dp)
+                                    shape = RoundedCornerShape(10.dp),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(46.dp)
                                 ) {
-                                    Text("Retry")
+                                    Text("Retry", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
@@ -230,7 +302,7 @@ fun ExtractionScreen(
                             .padding(48.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator()
+                        CircularProgressIndicator(color = HatchPrimary)
                     }
                 }
             }
@@ -250,9 +322,21 @@ fun ExtractionScreen(
     if (showAbortDialog) {
         AlertDialog(
             onDismissRequest = { showAbortDialog = false },
-            title = { Text("Pause or Revert Extraction?") },
+            containerColor = Color(0xFF14141C),
+            title = {
+                Text(
+                    text = "Pause or Revert Extraction?",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+            },
             text = {
-                Text("HatchZip is designed to be crash-safe. Pausing saves your state so you can resume later. Reverting reconstructs the archive back to its standard format.")
+                Text(
+                    text = "HatchDroid is crash-safe. Pausing saves your state so you can resume later. Reverting reconstructs the original archive from the safety journal.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextSecondary
+                )
             },
             confirmButton = {
                 Button(
@@ -260,9 +344,14 @@ fun ExtractionScreen(
                         showAbortDialog = false
                         viewModel.pauseExtraction()
                         onNavigateBack()
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = HatchPrimary,
+                        contentColor = Color(0xFF0A0A0C)
+                    ),
+                    shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Pause & Save State")
+                    Text("Pause & Save", fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -273,7 +362,7 @@ fun ExtractionScreen(
                         onNavigateBack()
                     }
                 ) {
-                    Text("Revert Archive")
+                    Text("Revert Archive", color = CoralRed)
                 }
             }
         )
@@ -285,18 +374,18 @@ private fun TelemetryRow(label: String, value: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 3.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = TextTertiary
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface
+            style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+            color = TextSecondary
         )
     }
 }

@@ -14,10 +14,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import dev.hatchzip.android.ui.theme.*
 import dev.hatchzip.android.viewmodel.ExtractionViewModel
 
@@ -32,15 +34,30 @@ fun SettingsAboutScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        containerColor = HatchBackground,
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             TopAppBar(
-                title = { Text("Settings & About", style = MaterialTheme.typography.titleLarge) },
+                title = {
+                    Text(
+                        text = "Settings & About",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                            contentDescription = "Back",
+                            tint = TextSecondary
+                        )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = HatchBackground
+                )
             )
         }
     ) { innerPadding ->
@@ -48,23 +65,20 @@ fun SettingsAboutScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(16.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            // 1. Storage & Operational Safeguards
-            Text(
-                text = "Storage Safeguards",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+            // 1. Storage Safeguards Section
+            SectionHeader("STORAGE SAFEGUARDS")
 
-            OutlinedCard(
-                shape = RoundedCornerShape(16.dp),
+            Surface(
+                color = Color(0xFF121218),
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF222230)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    // Buffer Slider Row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -73,11 +87,12 @@ fun SettingsAboutScreen(
                         Text(
                             text = "Safety Space Floor",
                             style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            color = TextPrimary
                         )
                         Text(
                             text = String.format("%.1f GB", uiState.keepFreeBufferGb),
-                            style = MaterialTheme.typography.labelLarge,
+                            style = MaterialTheme.typography.labelMedium.copy(fontFamily = FontFamily.Monospace),
                             color = EmeraldGreen,
                             fontWeight = FontWeight.Bold
                         )
@@ -89,117 +104,113 @@ fun SettingsAboutScreen(
                         value = uiState.keepFreeBufferGb,
                         onValueChange = { viewModel.setKeepFreeBuffer(it) },
                         valueRange = 1.0f..5.0f,
-                        steps = 7
+                        steps = 7,
+                        colors = SliderDefaults.colors(
+                            thumbColor = HatchPrimary,
+                            activeTrackColor = HatchPrimary
+                        )
                     )
 
                     Text(
-                        text = "Android requires 1.0–2.0 GB free for SQLite write-ahead logging (WAL), system caches, and IPC buffers. HatchDroid halts immediately if disk free space breaches this threshold.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = "Protects Android system caches, SQLite WAL logs, and apps by halting before disk free space drops below this threshold.",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextTertiary
                     )
-                }
-            }
 
-            Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
+                    HorizontalDivider(thickness = 0.5.dp, color = Color(0xFF222230))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-            OutlinedCard(
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Verify Archive Before Hatching",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            text = "Runs a fast pre-flight CRC integrity check across all entry headers before modifying disk.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                    // Pre-verify Checksums Row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Pre-Verify Archive Integrity",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TextPrimary
+                            )
+                            Text(
+                                text = "Validates CRC32 checksums of all entry headers prior to committing disk writes.",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TextTertiary
+                            )
+                        }
+                        Switch(
+                            checked = uiState.verifyFirst,
+                            onCheckedChange = { viewModel.setVerifyFirst(it) }
                         )
                     }
-                    Switch(
-                        checked = uiState.verifyFirst,
-                        onCheckedChange = { viewModel.setVerifyFirst(it) }
-                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // 2. The 2× Storage Trap Card
-            Text(
-                text = "Why HatchDroid Exists",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+            // 2. Algorithm & Architecture Section
+            SectionHeader("THE 2× STORAGE TRAP")
 
-            ElevatedCard(
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.elevatedCardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                ),
+            Surface(
+                color = Color(0xFF121218),
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF222230)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(18.dp)) {
+                Column(modifier = Modifier.padding(14.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = CoralRedContainer,
-                            modifier = Modifier.size(36.dp)
+                            shape = RoundedCornerShape(8.dp),
+                            color = CoralRed.copy(alpha = 0.15f),
+                            modifier = Modifier.size(32.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     imageVector = Icons.Outlined.Storage,
                                     contentDescription = null,
-                                    tint = CoralRedText,
-                                    modifier = Modifier.size(20.dp)
+                                    tint = CoralRed,
+                                    modifier = Modifier.size(18.dp)
                                 )
                             }
                         }
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = "The 2× Storage Trap",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            text = "Why Standard Unzippers Fail",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "Standard archive extractors require both the complete .zip file and its uncompressed contents to reside in storage simultaneously — demanding 2× to 3× the archive's size in free space.",
+                        text = "Standard extractors need both the full archive and uncompressed files on storage simultaneously—demanding 2× to 3× free space. A 20 GB archive fails on a device with 15 GB free.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = TextSecondary
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = EmeraldGreenContainer,
+                        shape = RoundedCornerShape(8.dp),
+                        color = EmeraldGreen.copy(alpha = 0.12f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, EmeraldGreen.copy(alpha = 0.25f)),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
+                        Column(modifier = Modifier.padding(10.dp)) {
                             Text(
-                                text = "HatchDroid's In-Place Reclamation",
+                                text = "HatchDroid Tail-First In-Place Reclamation",
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = EmeraldGreenText
+                                color = EmeraldGreen
                             )
-                            Spacer(modifier = Modifier.height(4.dp))
+                            Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "HatchDroid decodes entries in reverse topological order from the tail of the archive, immediately reclaiming flash storage blocks using Linux ftruncate. You only need enough space for a small safety buffer.",
-                                style = MaterialTheme.typography.bodySmall,
+                                text = "Extracts entries in reverse order from the end of the archive, immediately truncating freed archive blocks via Linux ftruncate. You only need space for a small safety buffer.",
+                                style = MaterialTheme.typography.labelSmall,
                                 color = EmeraldGreenText
                             )
                         }
@@ -207,34 +218,28 @@ fun SettingsAboutScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // 3. Engine & Hardware Telemetry Badges
-            Text(
-                text = "Engine Architecture & Compliance",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+            // 3. Engine & Hardware Telemetry
+            SectionHeader("ENGINE & HARDWARE TELEMETRY")
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                HardwareBadge(
+                HardwarePill(
                     icon = Icons.Outlined.Memory,
                     title = "16 KB Aligned",
                     subtitle = "Android 15+ ELFs",
                     modifier = Modifier.weight(1f)
                 )
-                HardwareBadge(
+                HardwarePill(
                     icon = Icons.Outlined.WifiOff,
                     title = "100% Offline",
                     subtitle = "Zero Network IPC",
                     modifier = Modifier.weight(1f)
                 )
-                HardwareBadge(
+                HardwarePill(
                     icon = Icons.Outlined.FolderCopy,
                     title = "FUSE Resilient",
                     subtitle = "Android Storage",
@@ -242,61 +247,77 @@ fun SettingsAboutScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // 4. Upstream & Developer Attribution
-            Text(
-                text = "Attribution & Credits",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+            // 4. Attribution & Credits
+            SectionHeader("ATTRIBUTION & CREDITS")
 
-            OutlinedCard(
-                shape = RoundedCornerShape(16.dp),
+            Surface(
+                color = Color(0xFF121218),
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF222230)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    AttributionRow(
+                Column(modifier = Modifier.padding(14.dp)) {
+                    CreditRow(
                         role = "Android Architecture & Port",
                         author = "@rsshir60",
-                        description = "Jetpack Compose UI, UniFFI bindings, Android 15 16 KB ELF alignment, FUSE filesystem resilience, throttled 60 FPS live telemetry."
+                        description = "Jetpack Compose UI, UniFFI JNI bridge, Android 15 16 KB page alignment, FUSE resilience, and 60 Hz throttled telemetry."
                     )
 
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
+                    HorizontalDivider(thickness = 0.5.dp, color = Color(0xFF222230))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                    AttributionRow(
+                    CreditRow(
                         role = "Core Algorithm & Rust Engine",
                         author = "xevrion / hatchzip",
-                        description = "Original Rust hatchzip-core engine, tail-first in-place extraction protocol, and zero-loss crash recovery state machine."
+                        description = "Original Rust hatchzip-core engine, tail-first extraction protocol, and zero-loss crash journal state machine."
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // Build Info Footer
+            // Footer
             Text(
-                text = "HatchDroid v0.1.0 • aarch64-linux-android • Rust 1.83+",
-                style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = "HatchDroid v0.1.0 • aarch64-linux-android • 16 KB ELF Page-Aligned",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 10.sp
+                ),
+                color = TextTertiary,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
 
 @Composable
-private fun HardwareBadge(
+private fun SectionHeader(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.labelSmall.copy(
+            letterSpacing = 1.sp,
+            fontWeight = FontWeight.Bold
+        ),
+        color = TextSecondary,
+        modifier = Modifier.padding(bottom = 6.dp)
+    )
+}
+
+@Composable
+private fun HardwarePill(
     icon: ImageVector,
     title: String,
     subtitle: String,
     modifier: Modifier = Modifier
 ) {
     Surface(
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+        shape = RoundedCornerShape(10.dp),
+        color = Color(0xFF14141C),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF222230)),
         modifier = modifier
     ) {
         Column(
@@ -306,26 +327,27 @@ private fun HardwareBadge(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(22.dp)
+                tint = HatchPrimary,
+                modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = title,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
             )
             Text(
                 text = subtitle,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                color = TextTertiary
             )
         }
     }
 }
 
 @Composable
-private fun AttributionRow(
+private fun CreditRow(
     role: String,
     author: String,
     description: String
@@ -338,21 +360,22 @@ private fun AttributionRow(
         ) {
             Text(
                 text = role,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.labelSmall,
+                color = HatchPrimary,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
                 text = author,
-                style = MaterialTheme.typography.labelLarge.copy(fontFamily = FontFamily.Monospace),
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.labelMedium.copy(fontFamily = FontFamily.Monospace),
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
             )
         }
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(3.dp))
         Text(
             text = description,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = TextSecondary
         )
     }
 }

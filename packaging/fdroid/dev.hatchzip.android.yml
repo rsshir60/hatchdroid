@@ -1,0 +1,50 @@
+Categories:
+  - System
+License: Apache-2.0 OR MIT
+AuthorName: rsshir60 & xevrion
+WebSite: https://hatchzip.dev
+SourceCode: https://github.com/rsshir60/hatchdroid
+IssueTracker: https://github.com/rsshir60/hatchdroid/issues
+
+AutoName: HatchDroid
+Summary: In-place archive extraction for low-storage devices
+Description: |-
+  Running out of phone storage when trying to unpack a massive archive?
+  Traditional archive extractors require double the free space—enough for both
+  the compressed archive and all the extracted files at the same time.
+
+  HatchDroid solves the low-storage extraction problem on Android. Powered by
+  the open-source Rust hatchzip-core engine, HatchDroid extracts archives IN PLACE
+  by progressively shrinking the source archive from the end as your files hatch out.
+
+  Features:
+  * True In-Place Extraction (progressive tail truncation and hole punching)
+  * Pre-Flight Storage Telemetry before altering a single byte
+  * Crash-Safe & Resumable extraction
+  * Multi-Volume & Split Archive Support (.001, .part1.rar, .z01)
+  * 16 KB ELF memory page alignment for Android 15+
+  * 100% offline, zero analytics, zero telemetry
+
+RepoType: git
+Repo: https://github.com/rsshir60/hatchdroid.git
+
+Builds:
+  - versionName: 0.1.0
+    versionCode: 1
+    commit: v0.1.0
+    subdir: android-app/app
+    gradle:
+      - yes
+    ndk: r27c
+    prebuild:
+      - pushd ../..
+      - cargo build -p hatchzip-android --target aarch64-linux-android --release --no-default-features
+      - popd
+      - mkdir -p src/main/jniLibs/arm64-v8a
+      - cp ../../target/aarch64-linux-android/release/libhatchzip_android.so src/main/jniLibs/arm64-v8a/
+    output: build/outputs/apk/release/app-release-unsigned.apk
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: 0.1.0
+CurrentVersionCode: 1

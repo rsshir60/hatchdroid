@@ -9,6 +9,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dev.hatchzip.android.ui.theme.*
 import java.io.File
@@ -25,11 +27,11 @@ fun ResumeBanner(
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = AmberWarningContainer,
-        shape = RoundedCornerShape(16.dp),
-        tonalElevation = 4.dp
+        shape = RoundedCornerShape(12.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, AmberWarning.copy(alpha = 0.35f))
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(14.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.Top
@@ -38,25 +40,26 @@ fun ResumeBanner(
                     imageVector = Icons.Outlined.History,
                     contentDescription = null,
                     tint = AmberWarningText,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(22.dp)
                 )
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(10.dp))
                 Column {
                     Text(
                         text = "Interrupted Extraction Found",
                         style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
                         color = AmberWarningText
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "$archiveName was partially hatched before an OS stop or power loss. You can safely resume without restarting or data loss.",
+                        text = "$archiveName was partially hatched before an OS stop or power loss. Safe to resume with zero data loss.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = AmberWarningText
+                        color = AmberWarningText.copy(alpha = 0.9f)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -68,14 +71,17 @@ fun ResumeBanner(
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = AmberWarningText
                     ),
-                    shape = RoundedCornerShape(10.dp)
+                    border = androidx.compose.foundation.BorderStroke(1.dp, AmberWarningText.copy(alpha = 0.4f)),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                    modifier = Modifier.height(34.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Restore,
                         contentDescription = null,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(14.dp)
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text("Revert Archive", style = MaterialTheme.typography.labelSmall)
                 }
 
@@ -85,11 +91,13 @@ fun ResumeBanner(
                     onClick = { onResumeClick(interruptedArchivePath) },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = AmberWarning,
-                        contentColor = MaterialTheme.colorScheme.surface
+                        contentColor = Color(0xFF0A0A0C)
                     ),
-                    shape = RoundedCornerShape(10.dp)
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                    modifier = Modifier.height(34.dp)
                 ) {
-                    Text("Resume Safely", style = MaterialTheme.typography.labelSmall)
+                    Text("Resume Safely", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                 }
             }
         }

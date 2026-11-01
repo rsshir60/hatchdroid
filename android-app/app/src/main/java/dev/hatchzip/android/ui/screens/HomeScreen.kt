@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.hatchzip.android.ui.components.*
+import dev.hatchzip.android.ui.theme.*
 import dev.hatchzip.android.viewmodel.ExtractionUiState
 import dev.hatchzip.android.viewmodel.ExtractionViewModel
 import kotlinx.coroutines.flow.collect
@@ -43,18 +44,31 @@ fun HomeScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        containerColor = HatchBackground,
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             TopAppBar(
                 title = {
                     Text(
                         text = "HatchDroid",
-                        style = MaterialTheme.typography.titleLarge
+                        style = MaterialTheme.typography.titleLarge,
+                        color = TextPrimary
                     )
                 },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = HatchBackground
+                ),
                 actions = {
-                    IconButton(onClick = onNavigateToSettings) {
-                        Icon(Icons.Outlined.Settings, contentDescription = "Settings")
+                    IconButton(
+                        onClick = onNavigateToSettings,
+                        modifier = Modifier.size(44.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Settings,
+                            contentDescription = "Settings",
+                            tint = TextSecondary,
+                            modifier = Modifier.size(22.dp)
+                        )
                     }
                 }
             )
@@ -64,7 +78,7 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 14.dp)
         ) {
             // 1. High-Priority Crash-Safe Resume Banner
             if (uiState.interruptedArchives.isNotEmpty()) {
@@ -73,15 +87,15 @@ fun HomeScreen(
                     interruptedArchivePath = firstInterrupted,
                     onResumeClick = { viewModel.resumeExtraction(it) },
                     onRestoreClick = { viewModel.restoreArchive(it) },
-                    modifier = Modifier.padding(bottom = 12.dp)
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
 
-            // 2. Storage Telemetry Card
+            // 2. Storage Telemetry Card (Reduced 25-35% footprint)
             StorageTelemetryCard(
                 storageInfo = uiState.storageInfo,
                 onRefreshScan = { viewModel.scanStorage() },
-                modifier = Modifier.padding(bottom = 12.dp)
+                modifier = Modifier.padding(bottom = 8.dp)
             )
 
             // 3. File Browser & Quick Filter Chips

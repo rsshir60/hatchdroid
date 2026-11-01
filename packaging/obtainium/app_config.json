@@ -1,0 +1,11 @@
+{
+  "id": "dev.hatchzip.android",
+  "url": "https://github.com/rsshir60/hatchdroid",
+  "author": "rsshir60",
+  "name": "HatchDroid",
+  "package": "dev.hatchzip.android",
+  "filterType": "apk",
+  "preferredApkFilter": "arm64-v8a",
+  "about": "In-place zero-overhead archive extractor for Android powered by hatchzip-core.",
+  "additionalSettings": "{\"includePrereleases\":false,\"versionDetection\":true,\"intermediateLink\":false}"
+}

@@ -1,0 +1,10 @@
+Initial public release of HatchDroid (v0.1.0):
+- In-place archive extraction powered by the Rust hatchzip-core engine.
+- Zero-overhead unpacking for ZIP, 7z, RAR4/5, and TAR/TAR.GZ archives.
+- 16 KB ELF memory page alignment for Android 15+.
+- Real-time 3-phase storage telemetry canvas (reclaimed, staged, compressed).
+- Dual-progress Foreground Service with notification pause/cancel controls.
+- Crash-safe atomic resumption index.
+- Smart Pre-Flight Storage Planner with configurable safety buffers.
+- Password prompt sheet for encrypted archives with Zeroize memory scrubbing.
+- 100% offline, zero telemetry, zero advertisements.

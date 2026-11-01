@@ -10,6 +10,8 @@
   <p>
     <a href="https://github.com/rsshir60/hatchdroid/actions/workflows/android.yml"><img src="https://img.shields.io/github/actions/workflow/status/rsshir60/hatchdroid/android.yml?branch=main&style=flat-square&logo=android&label=Android%20CI" alt="Android CI" /></a>
     <a href="https://github.com/rsshir60/hatchdroid/releases"><img src="https://img.shields.io/github/v/release/rsshir60/hatchdroid?style=flat-square&logo=android&label=APK%20Release&color=3DDC84" alt="Latest Release" /></a>
+    <a href="https://gitlab.com/IzzyOnDroid/repo"><img src="https://img.shields.io/badge/IzzyOnDroid-Available-blue?style=flat-square&logo=fdroid" alt="IzzyOnDroid" /></a>
+    <a href="https://github.com/ImranR98/Obtainium"><img src="https://img.shields.io/badge/Obtainium-Supported-8A2BE2?style=flat-square&logo=android" alt="Obtainium" /></a>
     <a href="#android-app-hatchdroid"><img src="https://img.shields.io/badge/Android-API%2033%2B%20(16%20KB%20ELF)-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Android API 33+" /></a>
     <a href="https://github.com/xevrion/hatchzip"><img src="https://img.shields.io/badge/Upstream-xevrion%2Fhatchzip-f97316?style=flat-square&logo=rust&logoColor=white" alt="Upstream HatchZip" /></a>
     <a href="#safety-guarantees"><img src="https://img.shields.io/badge/Telemetry-100%25%20Offline-10b981?style=flat-square&logo=shield&logoColor=white" alt="Zero Telemetry" /></a>

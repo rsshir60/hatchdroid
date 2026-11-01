@@ -10,7 +10,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
-import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,6 +25,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import dev.hatchzip.android.ui.extraction.LiveExtractionUiModel
 import dev.hatchzip.android.ui.theme.*
 import dev.hatchzip.android.util.StorageUtil
@@ -45,46 +45,46 @@ fun LiveExtractionTelemetryCard(
 ) {
     val haptic = LocalHapticFeedback.current
 
-    // Haptic milestone: batch ftruncate committed & storage freed
+    // Haptic feedback for disk reclamation
     LaunchedEffect(model.bytesArchiveReclaimed) {
         if (model.bytesArchiveReclaimed > 0) {
             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         }
     }
 
-    // Haptic milestone: extraction fully completed
     LaunchedEffect(model.phase) {
         if (model.phase == ExtractionPhase.Completed) {
             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         }
     }
 
-    ElevatedCard(
+    Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+        shape = RoundedCornerShape(16.dp),
+        color = Color(0xFF121218),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF222230))
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            // Header: Archive Name + Live Phase Badge
+        Column(modifier = Modifier.padding(18.dp)) {
+            // 1. Header: Filename & Phase Badge
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = archiveName,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
+                        color = TextPrimary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = if (mode == ExtractionMode.IN_PLACE_HATCH) "In-Place Tail-First Shrink" else "Standard Extraction",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = TextSecondary
                     )
                 }
 
@@ -94,68 +94,64 @@ fun LiveExtractionTelemetryCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // File Ticker & Progress Ratio
+            // 2. Large Progress Percentage + Hatched Bytes
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Bottom
             ) {
                 Text(
-                    text = model.currentFileName,
-                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
+                    text = String.format("%.1f%%", model.hatchedFraction * 100f),
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 32.sp
+                    ),
+                    color = TextPrimary
                 )
 
-                if (model.entriesTotal > 0) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "[${model.entriesCompleted}/${model.entriesTotal}]",
-                        style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                Text(
+                    text = "${StorageUtil.formatBytes(model.bytesHatched)} / ${StorageUtil.formatBytes(model.bytesUncompressedTotal)}",
+                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                    color = EmeraldGreen
+                )
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // 1. Hatched Output Progress (Shimmer Bar)
+            // 3. Shimmer Progress Bar (Output)
             LiveShimmerProgressBar(
                 progressFraction = model.hatchedFraction,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(12.dp)
+                    .height(8.dp)
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "Hatched: ${StorageUtil.formatBytes(model.bytesHatched)} / ${StorageUtil.formatBytes(model.bytesUncompressedTotal)}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = EmeraldGreen
-                )
-                Text(
-                    text = String.format("%.1f%%", model.hatchedFraction * 100f),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            // 2. Three-Segment Archive Space Bar (In-Place Mode Only)
+            // 4. Archive Shrink Bar (In-Place Mode)
             if (mode == ExtractionMode.IN_PLACE_HATCH) {
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-                Text(
-                    text = "Archive Storage State",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
+                val remainingBytes = (model.bytesArchiveInitial - model.bytesArchiveReclaimed - model.bytesBatchStaged).coerceAtLeast(0L)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "ARCHIVE RECLAMATION",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            letterSpacing = 1.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = TextSecondary
+                    )
+                    Text(
+                        text = "Freed ${StorageUtil.formatBytes(model.bytesArchiveReclaimed)}",
+                        style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace),
+                        fontWeight = FontWeight.Bold,
+                        color = EmeraldGreen
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(6.dp))
 
@@ -164,7 +160,7 @@ fun LiveExtractionTelemetryCard(
                     stagedFraction = model.stagedForCutFraction,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(14.dp)
+                        .height(8.dp)
                 )
 
                 Spacer(modifier = Modifier.height(6.dp))
@@ -174,74 +170,174 @@ fun LiveExtractionTelemetryCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "● Freed: ${StorageUtil.formatBytes(model.bytesArchiveReclaimed)}",
-                        style = MaterialTheme.typography.labelSmall,
+                        text = "Freed: ${StorageUtil.formatBytes(model.bytesArchiveReclaimed)}",
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                         color = EmeraldGreen
                     )
                     Text(
-                        text = "● Staged: ${StorageUtil.formatBytes(model.bytesBatchStaged)}",
-                        style = MaterialTheme.typography.labelSmall,
+                        text = "Staged: ${StorageUtil.formatBytes(model.bytesBatchStaged)}",
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                         color = AmberWarning
                     )
-                    val remainingBytes = (model.bytesArchiveInitial - model.bytesArchiveReclaimed - model.bytesBatchStaged).coerceAtLeast(0L)
                     Text(
-                        text = "● Left: ${StorageUtil.formatBytes(remainingBytes)}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = "Untouched: ${StorageUtil.formatBytes(remainingBytes)}",
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                        color = TextTertiary
                     )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // 5. Active File Ticker
+            Surface(
+                color = Color(0xFF161620),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (model.entriesTotal > 0) {
+                        Text(
+                            text = "[${model.entriesCompleted}/${model.entriesTotal}]",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = HatchPrimary
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                    }
+                    Text(
+                        text = if (model.currentFileName.isNotEmpty()) model.currentFileName else "Preparing output streams...",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 11.sp
+                        ),
+                        color = TextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 6. Two-Column Speed & ETA HUD
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                // Speed Column
+                Surface(
+                    color = Color(0xFF161620),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Text(
+                            text = "CURRENT SPEED",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 9.sp,
+                                letterSpacing = 0.5.sp,
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = TextTertiary
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = if (model.speedBytesPerSec > 64 * 1024) {
+                                "${StorageUtil.formatBytes(model.speedBytesPerSec.toLong())}/s"
+                            } else {
+                                "— MB/s"
+                            },
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = HatchPrimary
+                        )
+                    }
+                }
+
+                // ETA Column
+                Surface(
+                    color = Color(0xFF161620),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Text(
+                            text = "ESTIMATED TIME",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 9.sp,
+                                letterSpacing = 0.5.sp,
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = TextTertiary
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = StorageUtil.formatDuration(model.etaSeconds),
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = TextPrimary
+                        )
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // Telemetry Footer: Speed + ETA + Action Controls
+            // 7. Standardized Action Buttons (42 dp height)
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Column {
-                    Text(
-                        text = if (model.speedBytesPerSec > 64 * 1024) {
-                            "${StorageUtil.formatBytes(model.speedBytesPerSec.toLong())}/s"
-                        } else {
-                            "— MB/s"
-                        },
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = "ETA: ${StorageUtil.formatDuration(model.etaSeconds)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                OutlinedButton(
+                    onClick = onAbortClick,
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = CoralRed
+                    ),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, CoralRed.copy(alpha = 0.5f)),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(42.dp)
+                ) {
+                    Icon(Icons.Outlined.Close, contentDescription = "Abort", modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Abort", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
                 }
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(
-                        onClick = onAbortClick,
-                        shape = RoundedCornerShape(12.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                    ) {
-                        Icon(Icons.Outlined.Close, contentDescription = "Abort", modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Abort", style = MaterialTheme.typography.labelMedium)
-                    }
-
-                    Button(
-                        onClick = { if (isPaused) onResumeClick() else onPauseClick() },
-                        shape = RoundedCornerShape(12.dp),
-                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (isPaused) Icons.Outlined.PlayArrow else Icons.Outlined.Pause,
-                            contentDescription = if (isPaused) "Resume" else "Pause",
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(if (isPaused) "Resume" else "Pause", style = MaterialTheme.typography.labelMedium)
-                    }
+                Button(
+                    onClick = { if (isPaused) onResumeClick() else onPauseClick() },
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isPaused) EmeraldGreen else Color(0xFF222230),
+                        contentColor = if (isPaused) Color(0xFF0A0A0C) else TextPrimary
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(42.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isPaused) Icons.Outlined.PlayArrow else Icons.Outlined.Pause,
+                        contentDescription = if (isPaused) "Resume" else "Pause",
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = if (isPaused) "Resume" else "Pause",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
         }
@@ -267,35 +363,35 @@ fun LivePhaseBadge(
 
     val (label, containerColor, contentColor, isPulsing) = when {
         isPaused -> Quad("Paused", AmberWarningContainer, AmberWarningText, false)
-        phase is ExtractionPhase.ScanningIndex -> Quad("Scanning Index", MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.onSurfaceVariant, true)
+        phase is ExtractionPhase.ScanningIndex -> Quad("Scanning Index", Color(0xFF1E1E28), TextSecondary, true)
         phase is ExtractionPhase.DecodingEntry -> Quad("Hatching", EmeraldGreenContainer, EmeraldGreenText, true)
         phase is ExtractionPhase.FlushingFsync -> Quad("Flushing Flash (fsync)", AmberWarningContainer, AmberWarningText, true)
         phase is ExtractionPhase.TruncatingTail -> Quad("Truncating (ftruncate)", ArchivePurpleContainer, ArchivePurpleText, true)
         phase is ExtractionPhase.Completed -> Quad("Complete", EmeraldGreenContainer, EmeraldGreenText, false)
         phase is ExtractionPhase.Paused -> Quad("Paused", AmberWarningContainer, AmberWarningText, false)
         phase is ExtractionPhase.Failed -> Quad("Failed", CoralRedContainer, CoralRedText, false)
-        else -> Quad("Processing", MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.onSurfaceVariant, false)
+        else -> Quad("Processing", Color(0xFF1E1E28), TextSecondary, false)
     }
 
     Surface(
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(8.dp),
         color = containerColor,
         modifier = modifier
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(8.dp)
+                    .size(6.dp)
                     .clip(CircleShape)
                     .background(contentColor.copy(alpha = if (isPulsing) alphaPulse else 1f))
             )
-            Spacer(modifier = Modifier.width(6.dp))
+            Spacer(modifier = Modifier.width(5.dp))
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                 fontWeight = FontWeight.SemiBold,
                 color = contentColor
             )
@@ -327,20 +423,18 @@ fun LiveShimmerProgressBar(
         label = "shimmerTranslate"
     )
 
-    val trackColor = MaterialTheme.colorScheme.surfaceVariant
+    val trackColor = Color(0xFF222230)
     val baseFillColor = EmeraldGreen
-    val highlightColor = Color(0xFF6EE7B7) // Light Mint Emerald highlight
+    val highlightColor = Color(0xFF6EE7B7)
 
-    Canvas(modifier = modifier.clip(RoundedCornerShape(6.dp))) {
+    Canvas(modifier = modifier.clip(RoundedCornerShape(4.dp))) {
         val width = size.width
         val height = size.height
 
-        // 1. Background Track
         drawRect(color = trackColor, size = size)
 
         val fillWidth = width * animatedProgress
         if (fillWidth > 0f) {
-            // 2. Shimmer Brush across active filled area
             val shimmerStart = fillWidth * shimmerTranslate
             val brush = Brush.linearGradient(
                 colors = listOf(baseFillColor, highlightColor, baseFillColor),
@@ -375,10 +469,10 @@ fun ThreeSegmentArchiveShrinkBar(
 
     val reclaimedColor = EmeraldGreen
     val stagedColor = AmberWarning
-    val stagedStripeColor = Color(0xFFFDE68A) // Light Amber stripe
-    val remainingColor = MaterialTheme.colorScheme.surfaceVariant
+    val stagedStripeColor = Color(0xFFFDE68A)
+    val remainingColor = Color(0xFF222230)
 
-    Canvas(modifier = modifier.clip(RoundedCornerShape(6.dp))) {
+    Canvas(modifier = modifier.clip(RoundedCornerShape(4.dp))) {
         val totalW = size.width
         val h = size.height
 
@@ -397,23 +491,21 @@ fun ThreeSegmentArchiveShrinkBar(
 
         // 2. Staged Segment (Decoded, waiting for next fsync + ftruncate barrier)
         if (stagedW > 0f) {
-            // Draw amber base
             drawRect(
                 color = stagedColor,
                 topLeft = Offset(reclaimedW, 0f),
                 size = Size(stagedW, h)
             )
 
-            // Draw diagonal candy stripes
-            val stripeWidth = 6.dp.toPx()
-            val stripeSpacing = 12.dp.toPx()
+            val stripeWidth = 4.dp.toPx()
+            val stripeSpacing = 8.dp.toPx()
             var x = reclaimedW
             while (x < reclaimedW + stagedW) {
                 drawLine(
                     color = stagedStripeColor.copy(alpha = 0.5f),
                     start = Offset(x, h),
                     end = Offset(x + stripeWidth, 0f),
-                    strokeWidth = 3.dp.toPx()
+                    strokeWidth = 2.dp.toPx()
                 )
                 x += stripeSpacing
             }

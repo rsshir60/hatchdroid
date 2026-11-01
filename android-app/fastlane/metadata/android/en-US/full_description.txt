@@ -1,0 +1,32 @@
+Running out of phone storage when trying to unpack a massive archive? Traditional archive extractors require double the free space—enough for both the compressed archive and all the extracted files at the same time.
+
+HatchDroid solves the low-storage extraction problem on Android. Powered by the open-source Rust hatchzip-core engine, HatchDroid extracts archives IN PLACE by progressively shrinking the source archive from the end as your files hatch out.
+
+If you have a 30 GB archive on a phone with only 33 GB of free space, standard unzippers fail with an "Out of Storage Space" error. HatchDroid calculates the exact peak storage margin beforehand and safely unpacks your files while reclaiming the archive space on the fly.
+
+KEY FEATURES
+
+• True In-Place Extraction: Shrinks single-file ZIP, 7z, and TAR archives from the tail (via native POSIX ftruncate) or punches sparse holes in forward-streamed TAR.GZ archives (via fallocate) as files are written to disk.
+• Smart Pre-Flight Space Planner: Inspects every archive before modifying a single byte. View a clear Before vs. After storage bar and verify your extraction will fit while keeping a protected free-space safety buffer (2 GB default) for Android system stability.
+• Crash-Safe & Resumable: Battery died or app terminated mid-extraction? HatchDroid flushes each file to disk and records an atomic recovery state index before truncating archive bytes. Simply reopen the app and tap Resume to pick up right where you left off.
+• Multi-Volume & Split Archive Support: Unpacks split archives (.001, .part1.rar, .z01) and deletes each completed volume automatically as soon as its contents are extracted.
+• Real-Time 3-Phase Telemetry: Live animated canvas tracks reclaimed bytes, staged-for-cut files, and untouched archive blocks, along with MB/s transfer speed and ETA.
+• Encrypted Archive Support: Unpack password-protected ZIP (ZipCrypto, AES-128/256), 7z, and RAR5 archives. Passwords are automatically scrubbed from memory with zeroize.
+• Optional Pre-Verification Mode: Enable "Verify Checksums First" to stream and check every CRC-32 checksum before altering the source archive.
+• Keep-Archive Mode: Have plenty of free storage? Toggle "Keep Archive" anytime to use HatchDroid as a fast, traditional non-destructive unarchiver.
+• Full Local File & Archive Manager: Browse internal storage, filter for oversized archives, inspect compressed contents, manage file collisions (Skip, Replace, or Keep Both), and clean up leftover downloads.
+
+SUPPORTED FORMATS
+• ZIP & Split ZIP (.zip, .zip.001)
+• 7-Zip (.7z, multi-block & solid archives)
+• RAR (.rar, RAR4/RAR5, multi-part volumes)
+• TAR & Compressed TAR (.tar, .tar.gz, .tgz)
+
+BUILT FOR MODERN ANDROID (ANDROID 15+ READY)
+• Native Rust core compiled with 16 KB memory page alignment for modern 64-bit devices.
+• Runs long extractions inside a Foreground Service with live dual-bar progress notifications (watch your archive shrink while your output folder grows).
+• Zero ads, zero telemetry, 100% offline operation.
+
+OPEN SOURCE ATTRIBUTION
+HatchDroid is an independent community project powered by the open-source hatchzip-core engine (Apache-2.0 / MIT License).
+Source code: https://github.com/rsshir60/hatchdroid

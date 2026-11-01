@@ -27,10 +27,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.hatchzip.android.ui.theme.CoralRed
-import dev.hatchzip.android.ui.theme.EmeraldGreen
-import dev.hatchzip.android.ui.theme.EmeraldGreenContainer
-import dev.hatchzip.android.ui.theme.EmeraldGreenText
+import dev.hatchzip.android.ui.theme.*
 import dev.hatchzip.android.viewmodel.PasswordPromptState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,13 +72,15 @@ fun PasswordPromptSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = Color(0xFF0F0F14),
+        scrimColor = Color.Black.copy(alpha = 0.65f),
         modifier = modifier
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .padding(bottom = 36.dp),
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Title Header with Lock Icon
@@ -90,54 +89,56 @@ fun PasswordPromptSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.size(44.dp)
+                    shape = RoundedCornerShape(10.dp),
+                    color = HatchPrimary.copy(alpha = 0.15f),
+                    modifier = Modifier.size(40.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Outlined.Lock,
                             contentDescription = "Lock",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            tint = HatchPrimary,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.width(14.dp))
+                Spacer(modifier = Modifier.width(12.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = if (state.isHeaderEncryption) "Encrypted Archive" else "Decryption Required",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
                     )
                     Text(
                         text = state.archiveName,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = TextSecondary
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Safety Reassurance Callout
             Surface(
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(10.dp),
                 color = EmeraldGreenContainer,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
-                    modifier = Modifier.padding(14.dp),
+                    modifier = Modifier.padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Shield,
                         contentDescription = "Shield",
                         tint = EmeraldGreenText,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(20.dp)
                     )
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
                     Text(
                         text = "Pre-Truncation Guarantee: HatchDroid verifies your password and validates checksums before modifying or truncating a single byte of your archive.",
                         style = MaterialTheme.typography.bodySmall,
@@ -146,14 +147,14 @@ fun PasswordPromptSheet(
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Input Field (Monospace for unambiguous characters 0 vs O, 1 vs l)
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Archive Password") },
-                placeholder = { Text("Enter passphrase") },
+                label = { Text("Archive Password", color = TextSecondary) },
+                placeholder = { Text("Enter passphrase", color = TextTertiary) },
                 singleLine = true,
                 isError = state.errorMessage != null,
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -171,13 +172,15 @@ fun PasswordPromptSheet(
                 ),
                 textStyle = MaterialTheme.typography.bodyLarge.copy(
                     fontFamily = FontFamily.Monospace,
-                    letterSpacing = if (passwordVisible) MaterialTheme.typography.bodyLarge.letterSpacing else 2.sp
+                    letterSpacing = if (passwordVisible) MaterialTheme.typography.bodyLarge.letterSpacing else 2.sp,
+                    color = TextPrimary
                 ),
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             imageVector = if (passwordVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
-                            contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                            contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                            tint = TextSecondary
                         )
                     }
                 },
@@ -185,12 +188,17 @@ fun PasswordPromptSheet(
                     .fillMaxWidth()
                     .offset(x = shakeOffset.value.dp)
                     .focusRequester(focusRequester),
-                shape = RoundedCornerShape(14.dp)
+                shape = RoundedCornerShape(10.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = HatchPrimary,
+                    unfocusedBorderColor = Color(0xFF262633),
+                    errorBorderColor = CoralRed
+                )
             )
 
             // Error display
             if (state.errorMessage != null) {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = state.errorMessage,
                     style = MaterialTheme.typography.bodySmall,
@@ -199,19 +207,23 @@ fun PasswordPromptSheet(
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Actions
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 OutlinedButton(
                     onClick = onDismiss,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = TextSecondary),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF262633))
                 ) {
-                    Text("Cancel")
+                    Text("Cancel", style = MaterialTheme.typography.labelMedium)
                 }
 
                 Button(
@@ -222,10 +234,22 @@ fun PasswordPromptSheet(
                         }
                     },
                     enabled = password.isNotBlank(),
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = HatchPrimary,
+                        contentColor = Color(0xFF0A0A0C),
+                        disabledContainerColor = Color(0xFF222230),
+                        disabledContentColor = Color(0xFF555566)
+                    )
                 ) {
-                    Text(if (state.isHeaderEncryption) "Unlock" else "Extract")
+                    Text(
+                        text = if (state.isHeaderEncryption) "Unlock" else "Extract",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }

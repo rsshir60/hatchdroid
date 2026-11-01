@@ -1,6 +1,7 @@
 package dev.hatchzip.android.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dev.hatchzip.android.ui.theme.*
 import dev.hatchzip.android.util.DeviceStorageInfo
@@ -23,16 +25,16 @@ fun StorageTelemetryCard(
     onRefreshScan: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    ElevatedCard(
+    Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+        shape = RoundedCornerShape(16.dp),
+        color = HatchSurface,
+        border = androidx.compose.foundation.BorderStroke(1.dp, HatchOutline)
     ) {
         Column(
-            modifier = Modifier.padding(20.dp)
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)
         ) {
+            // 1. Two-Level Compact Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -40,32 +42,38 @@ fun StorageTelemetryCard(
             ) {
                 Column {
                     Text(
-                        text = "Device Storage",
+                        text = "Storage",
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        fontWeight = FontWeight.SemiBold,
+                        color = TextPrimary
                     )
                     Text(
-                        text = "${StorageUtil.formatBytes(storageInfo.freeBytes)} available of ${StorageUtil.formatBytes(storageInfo.totalBytes)}",
+                        text = "${StorageUtil.formatBytes(storageInfo.freeBytes)} free of ${StorageUtil.formatBytes(storageInfo.totalBytes)}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = TextSecondary
                     )
                 }
 
                 FilledTonalIconButton(
                     onClick = onRefreshScan,
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(32.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+                        containerColor = ArchivePurpleContainer
+                    )
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.AutoAwesome,
                         contentDescription = "Scan Archives",
-                        tint = ArchivePurple
+                        tint = ArchivePurpleText,
+                        modifier = Modifier.size(16.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            // Segmented Storage Bar
+            // 2. Ultra-Thin Aligned Storage Micro-Bar (8 dp height)
             val total = storageInfo.totalBytes.coerceAtLeast(1L).toFloat()
             val usedFraction = (storageInfo.usedBytes.toFloat() / total).coerceIn(0f, 1f)
             val reclaimableFraction = (storageInfo.reclaimableArchiveBytes.toFloat() / total).coerceIn(0f, 1f)
@@ -74,11 +82,10 @@ fun StorageTelemetryCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(14.dp)
-                    .clip(RoundedCornerShape(7.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(HatchSurfaceVariant)
             ) {
-                // Used Space (excluding reclaimable archives)
                 val baseUsedFraction = (usedFraction - reclaimableFraction).coerceAtLeast(0f)
                 if (baseUsedFraction > 0f) {
                     Box(
@@ -88,7 +95,6 @@ fun StorageTelemetryCard(
                             .background(StorageUsedGray)
                     )
                 }
-                // Reclaimable Archive Space (Highlighted Purple)
                 if (reclaimableFraction > 0f) {
                     Box(
                         modifier = Modifier
@@ -97,7 +103,6 @@ fun StorageTelemetryCard(
                             .background(ArchivePurple)
                     )
                 }
-                // Free Space (Emerald Green)
                 if (freeFraction > 0f) {
                     Box(
                         modifier = Modifier
@@ -108,53 +113,57 @@ fun StorageTelemetryCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Legend & Reclaimable Metric
+            // 3. Three Equal-Width Aligned Metric Columns with Shared Baselines
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                StorageLegendItem(
+                StorageMetricColumn(
+                    modifier = Modifier.weight(1f),
                     color = StorageUsedGray,
-                    label = "Used",
+                    label = "USED",
                     value = StorageUtil.formatBytes(storageInfo.usedBytes)
                 )
-                StorageLegendItem(
+                StorageMetricColumn(
+                    modifier = Modifier.weight(1f),
                     color = ArchivePurple,
-                    label = "Archives",
+                    label = "ARCHIVES",
                     value = StorageUtil.formatBytes(storageInfo.reclaimableArchiveBytes)
                 )
-                StorageLegendItem(
+                StorageMetricColumn(
+                    modifier = Modifier.weight(1f),
                     color = EmeraldGreen,
-                    label = "Free",
+                    label = "FREE",
                     value = StorageUtil.formatBytes(storageInfo.freeBytes)
                 )
             }
 
+            // 4. Compact Inline Reclaim Banner (Single Line, 32 dp height)
             if (storageInfo.reclaimableArchiveBytes > 0) {
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(10.dp))
                 Surface(
                     color = ArchivePurpleContainer,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(ArchivePurple)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Hatching will reclaim up to ${StorageUtil.formatBytes(storageInfo.reclaimableArchiveBytes)} without double storage",
-                            style = MaterialTheme.typography.bodySmall,
+                            text = "✦",
+                            style = MaterialTheme.typography.labelSmall,
                             color = ArchivePurpleText
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Hatching can reclaim up to ${StorageUtil.formatBytes(storageInfo.reclaimableArchiveBytes)} without 2× storage",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = ArchivePurpleText,
+                            maxLines = 1
                         )
                     }
                 }
@@ -164,30 +173,34 @@ fun StorageTelemetryCard(
 }
 
 @Composable
-private fun StorageLegendItem(
+private fun StorageMetricColumn(
     color: Color,
     label: String,
-    value: String
+    value: String,
+    modifier: Modifier = Modifier
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .size(10.dp)
-                .clip(CircleShape)
-                .background(color)
-        )
-        Spacer(modifier = Modifier.width(6.dp))
-        Column {
+    Column(modifier = modifier) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .clip(CircleShape)
+                    .background(color)
+            )
+            Spacer(modifier = Modifier.width(5.dp))
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurface
+                color = TextSecondary,
+                fontWeight = FontWeight.Medium
             )
         }
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.labelLarge,
+            color = TextPrimary,
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }

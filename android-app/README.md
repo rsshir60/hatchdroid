@@ -2,10 +2,33 @@
 
 Modern Jetpack Compose Android client for the **HatchZip** in-place archive extraction engine.
 
+<p>
+  <a href="https://github.com/rsshir60/hatchdroid/releases"><img src="https://img.shields.io/github/v/release/rsshir60/hatchdroid?style=flat-square&logo=android&label=APK%20Release&color=3DDC84" alt="Latest Release" /></a>
+  <a href="https://gitlab.com/IzzyOnDroid/repo"><img src="https://img.shields.io/badge/IzzyOnDroid-Available-blue?style=flat-square&logo=fdroid" alt="IzzyOnDroid" /></a>
+  <a href="https://f-droid.org"><img src="https://img.shields.io/badge/F--Droid-Pending-3DDC84?style=flat-square&logo=fdroid" alt="F-Droid" /></a>
+  <a href="https://github.com/ImranR98/Obtainium"><img src="https://img.shields.io/badge/Obtainium-Supported-8A2BE2?style=flat-square&logo=android" alt="Obtainium" /></a>
+  <a href="#android-15-ready-16-kb-page-aligned"><img src="https://img.shields.io/badge/Android-API%2033%2B%20(16%20KB%20ELF)-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Android API 33+" /></a>
+  <a href="#zero-telemetry"><img src="https://img.shields.io/badge/Telemetry-100%25%20Offline-10b981?style=flat-square&logo=shield&logoColor=white" alt="Zero Telemetry" /></a>
+</p>
+
 > [!IMPORTANT]
 > **Community Project & Upstream Attribution:**
 > HatchDroid is an **unofficial, independent community port** maintained by [@rsshir60](https://github.com/rsshir60).
 > The core in-place extraction engine (`hatchzip-core`) was created and designed by **[xevrion/hatchzip](https://github.com/xevrion/hatchzip)** ([hatchzip.dev](https://hatchzip.dev)). We are not the official developers of the HatchZip project.
+
+---
+
+## 📥 Download & Open-Source Distribution
+
+HatchDroid is distributed through privacy-respecting, libre channels:
+
+| Platform | Channel | Description |
+|:---|:---|:---|
+| 📦 **GitHub Releases** | [Direct APK](https://github.com/rsshir60/hatchdroid/releases) | Prebuilt signed APK (`arm64-v8a`) with SHA-256 checksums |
+| 🔄 **Obtainium** | Add `https://github.com/rsshir60/hatchdroid` | Instant automated background updates directly from GitHub |
+| 📱 **IzzyOnDroid** | F-Droid Client Repo | Primary F-Droid staging repo, auto-synced with releases |
+| 🛡️ **F-Droid Main** | Official F-Droid Repo | Libre distribution built directly from source |
+| 🏪 **Google Play** | [Store Listing Guide](play_store_listing.md) | Formatted metadata & `MANAGE_EXTERNAL_STORAGE` declaration |
 
 ---
 
