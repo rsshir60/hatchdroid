@@ -369,6 +369,8 @@ fn extract(
                 c1.done.fetch_add(n, Ordering::Relaxed);
             }),
             on_commit: Box::new(move |len| c2.archive.store(len, Ordering::Relaxed)),
+            on_phase: None,
+            on_entry: None,
         },
         keep_free,
     };

@@ -63,11 +63,30 @@ fun PreFlightBottomSheet(
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    Text(
-                        text = "${archive.format.uppercase()} • ${archive.itemCount} items • ${StorageUtil.formatBytes(archive.totalSize)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(top = 2.dp)
+                    ) {
+                        Text(
+                            text = "${archive.format.uppercase()} • ${archive.itemCount} items • ${StorageUtil.formatBytes(archive.totalSize)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        if (archive.isEncrypted) {
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = AmberWarningContainer
+                            ) {
+                                Text(
+                                    text = "ENCRYPTED",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = AmberWarningText,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
                 }
 
                 IconButton(onClick = onDismiss) {

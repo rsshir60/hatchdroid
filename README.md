@@ -70,7 +70,7 @@ Result on a phone with 35 GB free: FAILS ("Out of Storage Space")
 Result on a phone with 35 GB free: SUCCEEDS (Source shrinks as files hatch)
 ```
 
-| Real-World Scenario | Standard Mobile Extractors | HatchDroid |
+| Real-World Scenario | Standard Mobile Extractors | 🐣 HatchDroid |
 |:---|:---:|:---:|
 | **30 GB archive on a phone with 35 GB free** | ❌ Fails (*Out of Space*) | ✅ **Extracts smoothly** |
 | **Disk space reclamation** | ⏳ Only after 100% completion | ⚡ **Continuous, real-time tail truncation** |
@@ -89,16 +89,22 @@ HatchDroid pairs the memory-safe Rust `hatchzip-core` engine with a native Mater
   <img src="assets/icon/hatchdroid_store_icon.svg" width="96" height="96" alt="HatchDroid App Icon" />
 </div>
 
-### Key Android Capabilities
-- **True In-Place Storage Reclaimer:** Truncates random-access archives from the tail via POSIX `ftruncate`, and punches sparse filesystem holes in forward-streamed `tar.gz` archives via `fallocate(FALLOC_FL_PUNCH_HOLE)`.
-- **Pre-Flight Space Telemetry:** Inspects archive headers before modifying a single byte on disk, rendering a visual Before vs. After storage bar to guarantee the extraction fits.
-- **System Safety Buffer Enforcement:** Reserves a protected free-space floor (default 2 GB) so Android never hits zero storage or starves system SQLite databases.
-- **Foreground Service with Live Dual-Progress:** Runs resiliently in the background with persistent notification telemetry tracking both directions simultaneously:
-  - Archive Reclaimed: e.g., `24.5 GB / 30.0 GB reclaimed`
-  - Files Hatched: e.g., `26.2 GB / 32.0 GB extracted`
-- **Crash-Proof & Resumable (`.hatchzip` Journal):** If Android force-stops the background task or the battery dies, atomic flush barriers and state checkpoints let you reopen HatchDroid and tap **Resume Safely**.
-- **Android 15+ Ready (16 KB Page Alignment):** Native Rust shared libraries (`libhatchzip_android.so`) are compiled and verified with 16 KB ELF segment alignment for modern ARM64 hardware.
-- **100% Offline & Zero Telemetry:** No internet permission, no ads, no analytics SDKs, and zero network dependencies.
+### ✨ Key Android Capabilities
+
+- 🗜️ **True In-Place Storage Reclaimer:** Truncates random-access archives from the tail via POSIX `ftruncate`, and punches sparse filesystem holes in forward-streamed `tar.gz` archives via `fallocate(FALLOC_FL_PUNCH_HOLE)`.
+- 📊 **3-Phase Live Storage Telemetry:** Real-time animated canvas tracking the exact lifecycle of storage bytes:
+  - 🔻 **Reclaimed:** Archive bytes permanently freed from physical storage via `ftruncate`.
+  - ⏳ **Staged for Cut:** Unpacked files decoded in the current batch, awaiting the next atomic `fsync` flush.
+  - 📦 **Untouched Archive:** Compressed data remaining to be processed.
+- ⚡ **Dynamic Speed & ETA Telemetry:** Measures extraction throughput in MB/s, calculates completion ETA, and displays the exact entry path currently being decoded.
+- 🔐 **Encrypted Archive Support with Zeroize RAM Scrubbing:** Supports password-protected ZIP (ZipCrypto, AES-128/256), 7z (AES-256), and RAR5 archives with a Material 3 bottom sheet and shake feedback on invalid entries. Passwords are automatically wiped from device RAM using `zeroize::Zeroize` once the session completes.
+- 🔗 **System Content URI & Intent Integration (`ContentUriPathResolver`):** Transparently translates incoming `content://` and `file://` URIs from external file managers, cloud storage pickers, and browser download managers into low-level POSIX filesystem paths across internal storage (`/storage/emulated/0`) and physical SD cards.
+- 🛑 **System Safety Buffer Enforcement:** Reserves a protected free-space floor (default 2 GB) so Android never hits zero storage or starves system SQLite databases.
+- 🔔 **Foreground Service with Persistent Progress:** Runs resiliently in the background with persistent notification telemetry tracking files hatched and space reclaimed, featuring instant Pause / Resume actions.
+- 🔄 **Crash-Proof & Resumable (`.hatchzip` Journal):** If Android force-stops the background task or the battery dies, atomic flush barriers and state checkpoints let you reopen HatchDroid and tap **Resume Safely**.
+- 🧩 **Android 15+ Ready (16 KB Page Alignment):** Native Rust shared libraries (`libhatchzip_android.so`) are compiled and verified with 16 KB ELF segment alignment for modern ARM64 hardware.
+- 📳 **Haptic Feedback Integration:** Provides subtle haptic confirmations as extraction batches commit and physical sectors are freed.
+- 🔒 **100% Offline & Zero Telemetry:** No internet permission, no ads, no analytics SDKs, and zero network dependencies.
 
 > [!NOTE]
 > Full Google Play Store metadata, permission rationales, and privacy declarations are documented in [`docs/play_store_listing.md`](docs/play_store_listing.md).
@@ -116,7 +122,7 @@ HatchDroid pairs the memory-safe Rust `hatchzip-core` engine with a native Mater
 | **TAR (Uncompressed)** | POSIX ustar, GNU tar, long filenames, symlinks | **1 File** | Reverse tail `ftruncate` |
 | **TAR.GZ / `.tgz`** | Gzip-compressed TAR streams | **256 MiB Chunk** | Forward `fallocate` hole-punching |
 | **Split Archives** | `.001`, `.002`, `.part1.rar`, `.z01`, `.7z.001` | **1 Volume** | Immediate volume `unlink` |
-| **Encrypted Archives** | ZipCrypto, AES-128, AES-256, RAR5 AES, 7z AES | Same as base format | Authenticated decrypt + truncate |
+| **Encrypted Archives** | ZipCrypto, AES-128, AES-256, RAR5 AES, 7z AES | Same as base format | Authenticated decrypt + `zeroize` RAM wipe |
 
 ---
 
@@ -172,10 +178,16 @@ Because in-place extraction mutates the source archive, `hatchzip-core` enforces
 hatchdroid/
 ├── android-app/            # Native Jetpack Compose Android Application [Fork Addition]
 │   ├── app/                # Material 3 UI, ViewModels, Foreground Service, Space Telemetry
+│   │   ├── ui/components/  # LiveExtractionTelemetryCard, PasswordPromptSheet, DualProgressCard
+│   │   ├── ui/extraction/  # LiveProgressState, TelemetryBridge
+│   │   ├── ui/screens/     # HomeScreen, ExtractionScreen, SettingsAboutScreen, PermissionScreen
+│   │   └── util/           # ContentUriPathResolver, StorageUtil, PermissionUtil
 │   ├── gradle/             # Kotlin Gradle DSL & version catalogs
 │   └── scripts/            # 16 KB ELF alignment verification & release signing tools
 ├── crates/
 │   ├── android/            # UniFFI + JNI bridge exposing Rust core to Kotlin [Fork Addition]
+│   │   ├── cancel.rs       # Thread-safe atomic CancellationToken
+│   │   └── lib.rs          # Throttled TelemetryReporter, password check & zeroize wipe
 │   ├── uniffi-bindgen/     # UniFFI Kotlin bindings generator [Fork Addition]
 │   ├── core/               # Upstream in-place extraction engine (hatchzip-core)
 │   ├── cli/                # Upstream command-line interface (hatchzip)
@@ -282,7 +294,21 @@ HatchDroid is a low-level archive management tool that operates directly on mult
 </details>
 
 <details>
-<summary><b>2. Does in-place extraction cause excessive flash memory wear (UFS / eMMC)?</b></summary>
+<summary><b>2. How does HatchDroid handle password-protected archives securely?</b></summary>
+<br>
+
+HatchDroid supports encrypted ZIP (ZipCrypto, AES-128, AES-256), 7-Zip (AES-256), and RAR5 archives. When an encrypted archive is encountered, a Material 3 Bottom Sheet prompts for the passphrase with instant feedback. In the native layer, HatchDroid uses Rust's `zeroize::Zeroize` crate to cryptographically wipe the passphrase bytes from RAM immediately after session initialization, ensuring sensitive credentials cannot linger in memory.
+</details>
+
+<details>
+<summary><b>3. Can I open archives directly from other apps or the system download manager?</b></summary>
+<br>
+
+**Yes.** HatchDroid includes a built-in `ContentUriPathResolver` that intercepts system `content://` and `file://` intents. When you tap an archive in Chrome, Firefox, or a third-party file manager, HatchDroid resolves the URI directly to its underlying physical POSIX path on internal storage or physical SD cards and launches the pre-flight planning sheet.
+</details>
+
+<details>
+<summary><b>4. Does in-place extraction cause excessive flash memory wear (UFS / eMMC)?</b></summary>
 <br>
 
 **No.** In fact, in-place extraction causes **equal or fewer total flash write cycles** than traditional extraction:
@@ -292,21 +318,21 @@ HatchDroid is a low-level archive management tool that operates directly on mult
 </details>
 
 <details>
-<summary><b>3. How does tail truncation interact with Android's FUSE filesystem?</b></summary>
+<summary><b>5. How does tail truncation interact with Android's FUSE filesystem?</b></summary>
 <br>
 
 Android runs a userspace FUSE wrapper over `/storage/emulated/0` to manage Scoped Storage permissions. Some legacy extractors fail because Android's FUSE daemon returns `ENOSYS` or `EOPNOTSUPP` on POSIX advisory file locks (`flock`) or directory sync operations (`syncfs`). HatchDroid's modified platform driver handles these specific FUSE quirks by falling back gracefully, ensuring reliable tail truncation across internal storage and FAT32/exFAT SD cards.
 </details>
 
 <details>
-<summary><b>4. What happens if the app crashes, battery dies, or Android kills the process?</b></summary>
+<summary><b>6. What happens if the app crashes, battery dies, or Android kills the process?</b></summary>
 <br>
 
 **Your files remain completely safe.** HatchDroid maintains a two-file recovery journal (`archive.zip.hatchzip` and `archive.zip.hatchzip-tail`) holding the archive's central directory. Every file is completely extracted, verified against its CRC-32 checksum, and synced via `fsync` before the source archive is truncated. If extraction is interrupted at any moment, reopen HatchDroid and tap **Resume**—it will read the journal and pick up seamlessly from the exact byte where it left off.
 </details>
 
 <details>
-<summary><b>5. Can I use HatchDroid as a normal extractor without altering the source archive?</b></summary>
+<summary><b>7. Can I use HatchDroid as a normal extractor without altering the source archive?</b></summary>
 <br>
 
 **Yes.** If your device has sufficient storage, toggle **"Keep Archive"** in HatchDroid's settings. In this mode, HatchDroid operates as a traditional, non-destructive extractor: the source archive is untouched, and full extraction space is allocated as normal.

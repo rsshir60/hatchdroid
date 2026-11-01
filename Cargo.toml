@@ -26,11 +26,12 @@ tempfile = "3.27.0"
 zip = "9"
 
 [profile.release]
-opt-level = "z"
+opt-level = 3
 lto = "fat"
 codegen-units = 1
-panic = "unwind"
+panic = "abort"
 strip = "symbols"
+overflow-checks = true
 
 # Decompression in an unoptimised build is slow enough to drag the test
 # suite, and nobody steps through zstd in a debugger.

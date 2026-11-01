@@ -824,6 +824,8 @@ fn extract(
         progress: Progress {
             on_bytes: Box::new(move |n| b1.inc(n)),
             on_commit: Box::new(move |len| b2.set_message(format!("archive: {}", human(len)))),
+            on_phase: None,
+            on_entry: None,
         },
         keep_free,
     };

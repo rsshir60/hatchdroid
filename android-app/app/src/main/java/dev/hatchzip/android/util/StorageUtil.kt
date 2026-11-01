@@ -30,6 +30,17 @@ object StorageUtil {
         return String.format(Locale.US, "%.1f %s", value, units[unitIndex])
     }
 
+    fun formatDuration(seconds: Long?): String {
+        if (seconds == null || seconds < 0) return "—"
+        if (seconds < 60) return "${seconds}s"
+        val mins = seconds / 60
+        val secs = seconds % 60
+        if (mins < 60) return "${mins}m ${secs}s"
+        val hours = mins / 60
+        val remainingMins = mins % 60
+        return "${hours}h ${remainingMins}m"
+    }
+
     fun isArchive(file: File): Boolean {
         if (!file.isFile) return false
         val name = file.name.lowercase(Locale.ROOT)

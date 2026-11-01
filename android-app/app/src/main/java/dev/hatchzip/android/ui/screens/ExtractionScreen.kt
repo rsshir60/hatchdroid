@@ -14,6 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.hatchzip.android.ui.components.DualProgressCard
+import dev.hatchzip.android.ui.components.LiveExtractionTelemetryCard
+import dev.hatchzip.android.ui.components.PasswordPromptSheet
 import dev.hatchzip.android.ui.theme.*
 import dev.hatchzip.android.util.StorageUtil
 import dev.hatchzip.android.viewmodel.*
@@ -26,6 +28,7 @@ fun ExtractionScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val liveModel by viewModel.liveProgressState.collectAsState()
     var showAbortDialog by remember { mutableStateOf(false) }
 
     // Intercept back button when extracting so user doesn't accidentally disconnect
@@ -75,16 +78,10 @@ fun ExtractionScreen(
                 is ExtractionUiPhase.Extracting, is ExtractionUiPhase.Paused -> {
                     val archiveName = uiState.selectedArchive?.displayName ?: "Archive"
 
-                    DualProgressCard(
+                    LiveExtractionTelemetryCard(
                         archiveName = archiveName,
                         mode = uiState.extractionMode,
-                        originalArchiveSize = uiState.originalArchiveSize,
-                        currentArchiveSize = uiState.currentArchiveSize,
-                        extractedBytes = uiState.extractedBytes,
-                        totalOutputBytes = uiState.totalOutputBytes,
-                        freeSpaceFloor = uiState.freeSpaceFloor,
-                        currentFreeSpace = uiState.currentFreeSpace,
-                        currentFileName = uiState.currentFileName,
+                        model = liveModel,
                         isPaused = phase is ExtractionUiPhase.Paused,
                         onPauseClick = { viewModel.pauseExtraction() },
                         onResumeClick = { viewModel.resumeExtraction() },
@@ -238,6 +235,15 @@ fun ExtractionScreen(
                 }
             }
         }
+    }
+
+    // Password Prompt Sheet (Payload decryption during extraction)
+    uiState.passwordDialog?.let { dialogState ->
+        PasswordPromptSheet(
+            state = dialogState,
+            onSubmit = { password -> viewModel.submitPassword(password) },
+            onDismiss = { viewModel.dismissPasswordDialog() }
+        )
     }
 
     // Abort Confirmation Dialog

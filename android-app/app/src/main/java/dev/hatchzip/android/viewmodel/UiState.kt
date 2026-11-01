@@ -57,6 +57,14 @@ data class SpacePlanDetails(
     val reclaims: Boolean,
 )
 
+data class PasswordPromptState(
+    val archivePath: String,
+    val archiveName: String,
+    val isHeaderEncryption: Boolean,
+    val failedAttempts: Int = 0,
+    val errorMessage: String? = null
+)
+
 data class ExtractionUiState(
     val phase: ExtractionUiPhase = ExtractionUiPhase.Idle,
     val selectedArchive: ArchiveDetails? = null,
@@ -71,6 +79,9 @@ data class ExtractionUiState(
     val freeSpaceFloor: Long = 2L * 1024 * 1024 * 1024, // 2 GB default safety floor
     val currentFreeSpace: Long = 0L,
     val currentFileName: String = "",
+
+    // Password modal state
+    val passwordDialog: PasswordPromptState? = null,
 
     // User configurable extraction options
     val extractionMode: ExtractionMode = ExtractionMode.IN_PLACE_HATCH,

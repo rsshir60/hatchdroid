@@ -848,9 +848,18 @@ fn read_window(file: &mut File, written: u64) -> Result<Vec<u8>> {
     Ok(window)
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EnginePhase {
+    DecodingEntry,
+    FlushingFsync,
+    TruncatingTail,
+}
+
 pub struct Progress {
     pub on_bytes: Box<dyn Fn(u64) + Sync>,
     pub on_commit: Box<dyn Fn(u64) + Sync>,
+    pub on_phase: Option<Box<dyn Fn(EnginePhase) + Sync>>,
+    pub on_entry: Option<Box<dyn Fn(&str, u64) + Sync>>,
 }
 
 pub enum Outcome {
@@ -929,6 +938,9 @@ impl Run<'_> {
     /// behind them.
     fn commit(&mut self, start: usize, end: usize, links: Vec<Link>, out: &Path) -> Result<()> {
         let batch = &self.job.units[start..end];
+        if let Some(on_phase) = &self.progress.on_phase {
+            on_phase(EnginePhase::FlushingFsync);
+        }
         // The journal must never claim a file that a power cut could still
         // take back, since its archive bytes are about to be truncated.
         platform::sync_batch(out).context("flushing extracted files to disk")?;
@@ -970,6 +982,9 @@ impl Run<'_> {
 
         if self.journal.keep {
             return Ok(());
+        }
+        if let Some(on_phase) = &self.progress.on_phase {
+            on_phase(EnginePhase::TruncatingTail);
         }
         self.job
             .storage
@@ -1053,6 +1068,12 @@ impl Run<'_> {
         part: &Path,
         out: &Path,
     ) -> Result<bool> {
+        if let Some(on_phase) = &self.progress.on_phase {
+            on_phase(EnginePhase::DecodingEntry);
+        }
+        if let Some(on_entry) = &self.progress.on_entry {
+            on_entry(&item.path.to_string_lossy(), item.size);
+        }
         let window = match stream.codec {
             Codec::Stored => Vec::new(),
             Codec::Deflate => read_window(&mut file, at.written)?,
@@ -1479,11 +1500,15 @@ impl Run<'_> {
     /// archive has been touched at that point, so the batch simply reruns.
     fn extract_batch(&self, batch: &[Unit], out: &Path) -> Result<Option<Vec<Link>>> {
         let on_bytes = &*self.progress.on_bytes;
+        let on_phase = self.progress.on_phase.as_deref();
+        let on_entry = self.progress.on_entry.as_deref();
         if self.job.format.serial() {
             let mut sink = DiskSink {
                 out,
                 stop: self.stop,
                 on_bytes,
+                on_phase,
+                on_entry,
                 buf: vec![0; BUF_SIZE],
                 links: Vec::new(),
             };
@@ -1511,6 +1536,8 @@ impl Run<'_> {
                         out,
                         stop: self.stop,
                         on_bytes,
+                        on_phase,
+                        on_entry,
                         buf: vec![0; BUF_SIZE],
                         links: Vec::new(),
                     };
@@ -1745,6 +1772,8 @@ struct DiskSink<'a> {
     out: &'a Path,
     stop: &'a AtomicBool,
     on_bytes: &'a (dyn Fn(u64) + Sync),
+    on_phase: Option<&'a (dyn Fn(EnginePhase) + Sync)>,
+    on_entry: Option<&'a (dyn Fn(&str, u64) + Sync)>,
     buf: Vec<u8>,
     links: Vec<Link>,
 }
@@ -1758,6 +1787,12 @@ impl Sink for DiskSink<'_> {
 
 impl DiskSink<'_> {
     fn write(&mut self, item: &Item, data: &mut dyn Read) -> Result<()> {
+        if let Some(on_phase) = self.on_phase {
+            on_phase(EnginePhase::DecodingEntry);
+        }
+        if let Some(on_entry) = self.on_entry {
+            on_entry(&item.path.to_string_lossy(), item.size);
+        }
         let dest = self.out.join(&item.path);
         match &item.kind {
             Kind::Dir => {

@@ -48,7 +48,7 @@ fun HomeScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "HatchZip",
+                        text = "HatchDroid",
                         style = MaterialTheme.typography.titleLarge
                     )
                 },
@@ -96,6 +96,15 @@ fun HomeScreen(
                 modifier = Modifier.weight(1f)
             )
         }
+    }
+
+    // Password Prompt Sheet (Header decryption during archive inspection)
+    uiState.passwordDialog?.let { dialogState ->
+        PasswordPromptSheet(
+            state = dialogState,
+            onSubmit = { password -> viewModel.submitPassword(password) },
+            onDismiss = { viewModel.dismissPasswordDialog() }
+        )
     }
 
     // Pre-Flight Modal Bottom Sheet

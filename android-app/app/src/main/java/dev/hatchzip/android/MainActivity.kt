@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import dev.hatchzip.android.ui.screens.*
 import dev.hatchzip.android.ui.theme.HatchZipTheme
+import dev.hatchzip.android.util.ContentUriPathResolver
 import dev.hatchzip.android.util.PermissionUtil
 import dev.hatchzip.android.viewmodel.ExtractionUiPhase
 import dev.hatchzip.android.viewmodel.ExtractionViewModel
@@ -68,7 +69,7 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                             currentScreen == "settings" -> {
-                                SettingsScreen(
+                                SettingsAboutScreen(
                                     viewModel = viewModel,
                                     onNavigateBack = { currentScreen = "home" }
                                 )
@@ -110,13 +111,15 @@ class MainActivity : ComponentActivity() {
     private fun handleIncomingArchiveIntent(intent: Intent?) {
         if (intent?.action == Intent.ACTION_VIEW) {
             val uri: Uri? = intent.data
-            if (uri != null && uri.scheme == "file") {
-                val path = uri.path
+            if (uri != null) {
+                val path = ContentUriPathResolver.resolvePosixPath(this, uri)
                 if (path != null) {
                     val file = File(path)
                     if (file.exists()) {
                         viewModel.selectArchive(file)
                     }
+                } else {
+                    android.util.Log.w("HatchDroid", "Unable to resolve direct POSIX path for URI: $uri")
                 }
             }
         }

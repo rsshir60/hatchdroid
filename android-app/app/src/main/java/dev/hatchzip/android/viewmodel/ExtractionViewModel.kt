@@ -5,13 +5,18 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.os.Build
 import android.os.Environment
 import android.os.IBinder
+import android.os.PowerManager
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import dev.hatchzip.android.service.ExtractionForegroundService
+import dev.hatchzip.android.ui.extraction.LiveExtractionUiModel
+import dev.hatchzip.android.ui.extraction.TelemetryBridge
 import dev.hatchzip.android.util.StorageUtil
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -24,6 +29,9 @@ class ExtractionViewModel(application: Application) : AndroidViewModel(applicati
 
     private val _uiState = MutableStateFlow(ExtractionUiState())
     val uiState = _uiState.asStateFlow()
+
+    val telemetryBridge = TelemetryBridge()
+    val liveProgressState = telemetryBridge.liveState
 
     // Service connection
     private var serviceBinder: ExtractionForegroundService.LocalBinder? = null
@@ -145,9 +153,9 @@ class ExtractionViewModel(application: Application) : AndroidViewModel(applicati
         return filtered.sortedWith(compareBy({ !it.isDirectory }, { it.name.lowercase() }))
     }
 
-    fun selectArchive(file: File) {
+    fun selectArchive(file: File, password: String? = null) {
         viewModelScope.launch(Dispatchers.IO) {
-            _uiState.update { it.copy(phase = ExtractionUiPhase.Checking) }
+            _uiState.update { it.copy(phase = ExtractionUiPhase.Checking, passwordInput = password) }
 
             try {
                 val path = file.absolutePath
@@ -160,8 +168,8 @@ class ExtractionViewModel(application: Application) : AndroidViewModel(applicati
                     throw IllegalArgumentException("Archive file does not exist: $path")
                 }
 
-                // Call native Rust pre-flight inspection
-                val info = checkArchive(path)
+                // Call native Rust pre-flight inspection with optional password
+                val info = checkArchive(path, password)
 
                 val archiveDetails = ArchiveDetails(
                     path = path,
@@ -204,7 +212,35 @@ class ExtractionViewModel(application: Application) : AndroidViewModel(applicati
                     it.copy(
                         selectedArchive = archiveDetails,
                         spacePlan = spacePlan,
+                        passwordDialog = null,
                         phase = ExtractionUiPhase.Ready
+                    )
+                }
+            } catch (e: HatchZipException.PasswordRequired) {
+                _uiState.update {
+                    it.copy(
+                        phase = ExtractionUiPhase.Idle,
+                        passwordDialog = PasswordPromptState(
+                            archivePath = file.absolutePath,
+                            archiveName = file.name,
+                            isHeaderEncryption = true,
+                            failedAttempts = 0,
+                            errorMessage = null
+                        )
+                    )
+                }
+            } catch (e: HatchZipException.InvalidPassword) {
+                _uiState.update {
+                    val prevAttempts = it.passwordDialog?.failedAttempts ?: 0
+                    it.copy(
+                        phase = ExtractionUiPhase.Idle,
+                        passwordDialog = PasswordPromptState(
+                            archivePath = file.absolutePath,
+                            archiveName = file.name,
+                            isHeaderEncryption = true,
+                            failedAttempts = prevAttempts + 1,
+                            errorMessage = "Incorrect password. Archive header decryption failed."
+                        )
                     )
                 }
             } catch (e: HatchZipException) {
@@ -225,6 +261,26 @@ class ExtractionViewModel(application: Application) : AndroidViewModel(applicati
                 }
             }
         }
+    }
+
+    fun submitPassword(password: String) {
+        val dialog = _uiState.value.passwordDialog ?: return
+        if (dialog.isHeaderEncryption) {
+            selectArchive(File(dialog.archivePath), password)
+        } else {
+            // Payload encryption triggered right before extraction
+            _uiState.update {
+                it.copy(
+                    passwordInput = password,
+                    passwordDialog = null
+                )
+            }
+            startExtraction()
+        }
+    }
+
+    fun dismissPasswordDialog() {
+        _uiState.update { it.copy(passwordDialog = null) }
     }
 
     fun dismissPreFlight() {
@@ -263,6 +319,8 @@ class ExtractionViewModel(application: Application) : AndroidViewModel(applicati
         val archive = _uiState.value.selectedArchive ?: return
         val plan = _uiState.value.spacePlan ?: return
 
+        telemetryBridge.reset()
+
         _uiState.update {
             it.copy(
                 phase = ExtractionUiPhase.Extracting,
@@ -298,46 +356,44 @@ class ExtractionViewModel(application: Application) : AndroidViewModel(applicati
             val keepArchive = _uiState.value.extractionMode == ExtractionMode.NORMAL_KEEP
             val outputDir = _uiState.value.outputDirectoryOverride ?: archive.defaultOutputDir
             val password = _uiState.value.passwordInput
+            val powerManager = getApplication<Application>().getSystemService(Context.POWER_SERVICE) as? PowerManager
 
-            val callback = object : ProgressCallback {
-                override fun onBytesExtracted(bytes: ULong) {
-                    val extracted = bytes.toLong()
-                    _uiState.update { it.copy(extractedBytes = extracted) }
-                    service?.updateProgress(
-                        archiveName = archive.fileName,
-                        currentFile = _uiState.value.currentFileName,
-                        extractedBytes = extracted,
-                        totalOutputBytes = archive.totalSize,
-                        originalArchiveSize = archive.totalSize,
-                        currentArchiveSize = _uiState.value.currentArchiveSize
-                    )
-                }
+            val telemetryJob = launch {
+                telemetryBridge.liveState.collect { snapshot ->
+                    // Thermal guardrail: yield CPU when device experiences severe thermal pressure
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && powerManager != null) {
+                        if (powerManager.currentThermalStatus >= PowerManager.THERMAL_STATUS_SEVERE) {
+                            delay(50)
+                        }
+                    }
 
-                override fun onArchiveShrunk(newArchiveLen: ULong) {
-                    val newLen = newArchiveLen.toLong()
-                    val currentFree = StorageUtil.getDeviceStorage().freeBytes
+                    val phaseDesc = when (snapshot.phase) {
+                        is ExtractionPhase.ScanningIndex -> "Scanning index"
+                        is ExtractionPhase.DecodingEntry -> "Hatching"
+                        is ExtractionPhase.FlushingFsync -> "Flushing to flash (fsync)"
+                        is ExtractionPhase.TruncatingTail -> "Truncating tail (ftruncate)"
+                        is ExtractionPhase.Completed -> "Complete"
+                        is ExtractionPhase.Paused -> "Paused"
+                        is ExtractionPhase.Failed -> "Failed"
+                    }
+                    val currentArchive = (snapshot.bytesArchiveInitial - snapshot.bytesArchiveReclaimed).coerceAtLeast(0L)
                     _uiState.update {
                         it.copy(
-                            currentArchiveSize = newLen,
-                            currentFreeSpace = currentFree
+                            currentFileName = snapshot.currentFileName,
+                            extractedBytes = snapshot.bytesHatched,
+                            currentArchiveSize = currentArchive
                         )
                     }
-                }
-
-                override fun onPhaseChanged(phase: ExtractionPhase) {
-                    val uiPhase = when (phase) {
-                        is ExtractionPhase.Checking -> ExtractionUiPhase.Checking
-                        is ExtractionPhase.Planning -> ExtractionUiPhase.Planning
-                        is ExtractionPhase.Extracting -> ExtractionUiPhase.Extracting
-                        is ExtractionPhase.Paused -> ExtractionUiPhase.Paused
-                        is ExtractionPhase.Finished -> ExtractionUiPhase.Finished
-                        is ExtractionPhase.Failed -> ExtractionUiPhase.Failed(phase.message)
-                    }
-                    _uiState.update { it.copy(phase = uiPhase) }
-                }
-
-                override fun onError(message: String) {
-                    android.util.Log.e("HatchZip", "Rust extraction error: $message")
+                    service?.updateProgress(
+                        archiveName = archive.fileName,
+                        currentFile = snapshot.currentFileName,
+                        extractedBytes = snapshot.bytesHatched,
+                        totalOutputBytes = snapshot.bytesUncompressedTotal,
+                        originalArchiveSize = snapshot.bytesArchiveInitial,
+                        currentArchiveSize = currentArchive,
+                        speedBytesPerSec = snapshot.speedBytesPerSec,
+                        phaseDescription = phaseDesc
+                    )
                 }
             }
 
@@ -349,7 +405,7 @@ class ExtractionViewModel(application: Application) : AndroidViewModel(applicati
                     keepFreeBytes = keepFreeBytes.toULong(),
                     keepArchive = keepArchive,
                     password = password,
-                    callback = callback
+                    listener = telemetryBridge
                 )
 
                 // Verify output folder has contents unless paused or failed
@@ -363,6 +419,35 @@ class ExtractionViewModel(application: Application) : AndroidViewModel(applicati
                         }
                     }
                 }
+            } catch (e: HatchZipException.PasswordRequired) {
+                android.util.Log.w("HatchZip", "Archive payload requires password: ${e.message}")
+                _uiState.update {
+                    it.copy(
+                        phase = ExtractionUiPhase.Paused,
+                        passwordDialog = PasswordPromptState(
+                            archivePath = archive.path,
+                            archiveName = archive.fileName,
+                            isHeaderEncryption = false,
+                            failedAttempts = 0,
+                            errorMessage = "This archive requires a password to decrypt entries."
+                        )
+                    )
+                }
+            } catch (e: HatchZipException.InvalidPassword) {
+                android.util.Log.w("HatchZip", "Archive payload invalid password: ${e.message}")
+                _uiState.update {
+                    val prevAttempts = it.passwordDialog?.failedAttempts ?: 0
+                    it.copy(
+                        phase = ExtractionUiPhase.Paused,
+                        passwordDialog = PasswordPromptState(
+                            archivePath = archive.path,
+                            archiveName = archive.fileName,
+                            isHeaderEncryption = false,
+                            failedAttempts = prevAttempts + 1,
+                            errorMessage = "Incorrect password. Data integrity check failed."
+                        )
+                    )
+                }
             } catch (e: HatchZipException) {
                 android.util.Log.e("HatchZip", "Native extraction failed", e)
                 _uiState.update { it.copy(phase = ExtractionUiPhase.Failed(e.message ?: "Extraction failed")) }
@@ -370,6 +455,7 @@ class ExtractionViewModel(application: Application) : AndroidViewModel(applicati
                 android.util.Log.e("HatchZip", "Extraction error", e)
                 _uiState.update { it.copy(phase = ExtractionUiPhase.Failed(e.message ?: "Extraction error")) }
             } finally {
+                telemetryJob.cancel()
                 service?.stopExtraction()
                 currentHandle = null
                 scanStorage()

@@ -1,5 +1,8 @@
 # 1. Keep JNA core classes and native dispatch methods
 -keep class com.sun.jna.** { *; }
+-keepclassmembers class * extends com.sun.jna.** {
+    public *;
+}
 -keepclassmembers class * extends com.sun.jna.Structure {
     public *;
 }

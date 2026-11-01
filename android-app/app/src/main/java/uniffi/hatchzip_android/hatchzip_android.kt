@@ -654,43 +654,32 @@ internal open class UniffiForeignFutureStructVoid(
 internal interface UniffiForeignFutureCompleteVoid : com.sun.jna.Callback {
     fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructVoid.UniffiByValue,)
 }
-internal interface UniffiCallbackInterfaceProgressCallbackMethod0 : com.sun.jna.Callback {
-    fun callback(`uniffiHandle`: Long,`bytes`: Long,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
+internal interface UniffiCallbackInterfaceExtractionProgressListenerMethod0 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`snapshot`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
 }
-internal interface UniffiCallbackInterfaceProgressCallbackMethod1 : com.sun.jna.Callback {
-    fun callback(`uniffiHandle`: Long,`newArchiveLen`: Long,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
-}
-internal interface UniffiCallbackInterfaceProgressCallbackMethod2 : com.sun.jna.Callback {
-    fun callback(`uniffiHandle`: Long,`phase`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
-}
-internal interface UniffiCallbackInterfaceProgressCallbackMethod3 : com.sun.jna.Callback {
-    fun callback(`uniffiHandle`: Long,`message`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
-}
-@Structure.FieldOrder("onBytesExtracted", "onArchiveShrunk", "onPhaseChanged", "onError", "uniffiFree")
-internal open class UniffiVTableCallbackInterfaceProgressCallback(
-    @JvmField internal var `onBytesExtracted`: UniffiCallbackInterfaceProgressCallbackMethod0? = null,
-    @JvmField internal var `onArchiveShrunk`: UniffiCallbackInterfaceProgressCallbackMethod1? = null,
-    @JvmField internal var `onPhaseChanged`: UniffiCallbackInterfaceProgressCallbackMethod2? = null,
-    @JvmField internal var `onError`: UniffiCallbackInterfaceProgressCallbackMethod3? = null,
+@Structure.FieldOrder("onTelemetry", "uniffiFree")
+internal open class UniffiVTableCallbackInterfaceExtractionProgressListener(
+    @JvmField internal var `onTelemetry`: UniffiCallbackInterfaceExtractionProgressListenerMethod0? = null,
     @JvmField internal var `uniffiFree`: UniffiCallbackInterfaceFree? = null,
 ) : Structure() {
     class UniffiByValue(
-        `onBytesExtracted`: UniffiCallbackInterfaceProgressCallbackMethod0? = null,
-        `onArchiveShrunk`: UniffiCallbackInterfaceProgressCallbackMethod1? = null,
-        `onPhaseChanged`: UniffiCallbackInterfaceProgressCallbackMethod2? = null,
-        `onError`: UniffiCallbackInterfaceProgressCallbackMethod3? = null,
+        `onTelemetry`: UniffiCallbackInterfaceExtractionProgressListenerMethod0? = null,
         `uniffiFree`: UniffiCallbackInterfaceFree? = null,
-    ): UniffiVTableCallbackInterfaceProgressCallback(`onBytesExtracted`,`onArchiveShrunk`,`onPhaseChanged`,`onError`,`uniffiFree`,), Structure.ByValue
+    ): UniffiVTableCallbackInterfaceExtractionProgressListener(`onTelemetry`,`uniffiFree`,), Structure.ByValue
 
-   internal fun uniffiSetValue(other: UniffiVTableCallbackInterfaceProgressCallback) {
-        `onBytesExtracted` = other.`onBytesExtracted`
-        `onArchiveShrunk` = other.`onArchiveShrunk`
-        `onPhaseChanged` = other.`onPhaseChanged`
-        `onError` = other.`onError`
+   internal fun uniffiSetValue(other: UniffiVTableCallbackInterfaceExtractionProgressListener) {
+        `onTelemetry` = other.`onTelemetry`
         `uniffiFree` = other.`uniffiFree`
     }
 
 }
+
+
+
+
+
+
+
 
 
 
@@ -801,19 +790,21 @@ fun uniffi_hatchzip_android_checksum_func_plan_extraction(
 ): Short
 fun uniffi_hatchzip_android_checksum_func_restore_archive(
 ): Short
+fun uniffi_hatchzip_android_checksum_method_cancellationtoken_cancel(
+): Short
+fun uniffi_hatchzip_android_checksum_method_cancellationtoken_is_cancelled(
+): Short
 fun uniffi_hatchzip_android_checksum_method_extractionhandle_cancel(
 ): Short
 fun uniffi_hatchzip_android_checksum_method_extractionhandle_is_cancelled(
 ): Short
+fun uniffi_hatchzip_android_checksum_method_extractionhandle_token(
+): Short
+fun uniffi_hatchzip_android_checksum_constructor_cancellationtoken_new(
+): Short
 fun uniffi_hatchzip_android_checksum_constructor_extractionhandle_new(
 ): Short
-fun uniffi_hatchzip_android_checksum_method_progresscallback_on_bytes_extracted(
-): Short
-fun uniffi_hatchzip_android_checksum_method_progresscallback_on_archive_shrunk(
-): Short
-fun uniffi_hatchzip_android_checksum_method_progresscallback_on_phase_changed(
-): Short
-fun uniffi_hatchzip_android_checksum_method_progresscallback_on_error(
+fun uniffi_hatchzip_android_checksum_method_extractionprogresslistener_on_telemetry(
 ): Short
 fun ffi_hatchzip_android_uniffi_contract_version(
 ): Int
@@ -853,7 +844,7 @@ internal interface UniffiLib : Library {
             val lib = loadIndirect<UniffiLib>(componentName)
             // No need to check the contract version and checksums, since 
             // we already did that with `IntegrityCheckingUniffiLib` above.
-            uniffiCallbackInterfaceProgressCallback.register(lib)
+            uniffiCallbackInterfaceExtractionProgressListener.register(lib)
             // Loading of library with integrity check done.
             lib
         }
@@ -865,7 +856,17 @@ internal interface UniffiLib : Library {
     }
 
     // FFI functions
-    fun uniffi_hatchzip_android_fn_clone_extractionhandle(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_hatchzip_android_fn_clone_cancellationtoken(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+): Pointer
+fun uniffi_hatchzip_android_fn_free_cancellationtoken(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+): Unit
+fun uniffi_hatchzip_android_fn_constructor_cancellationtoken_new(uniffi_out_err: UniffiRustCallStatus, 
+): Pointer
+fun uniffi_hatchzip_android_fn_method_cancellationtoken_cancel(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+): Unit
+fun uniffi_hatchzip_android_fn_method_cancellationtoken_is_cancelled(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+): Byte
+fun uniffi_hatchzip_android_fn_clone_extractionhandle(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
 ): Pointer
 fun uniffi_hatchzip_android_fn_free_extractionhandle(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
 ): Unit
@@ -875,11 +876,13 @@ fun uniffi_hatchzip_android_fn_method_extractionhandle_cancel(`ptr`: Pointer,uni
 ): Unit
 fun uniffi_hatchzip_android_fn_method_extractionhandle_is_cancelled(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
 ): Byte
-fun uniffi_hatchzip_android_fn_init_callback_vtable_progresscallback(`vtable`: UniffiVTableCallbackInterfaceProgressCallback,
+fun uniffi_hatchzip_android_fn_method_extractionhandle_token(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+): Pointer
+fun uniffi_hatchzip_android_fn_init_callback_vtable_extractionprogresslistener(`vtable`: UniffiVTableCallbackInterfaceExtractionProgressListener,
 ): Unit
-fun uniffi_hatchzip_android_fn_func_check_archive(`path`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+fun uniffi_hatchzip_android_fn_func_check_archive(`path`: RustBuffer.ByValue,`password`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
 ): RustBuffer.ByValue
-fun uniffi_hatchzip_android_fn_func_extract_archive(`handle`: Pointer,`path`: RustBuffer.ByValue,`outputDir`: RustBuffer.ByValue,`keepFreeBytes`: Long,`keepArchive`: Byte,`password`: RustBuffer.ByValue,`callback`: Long,uniffi_out_err: UniffiRustCallStatus, 
+fun uniffi_hatchzip_android_fn_func_extract_archive(`handle`: Pointer,`path`: RustBuffer.ByValue,`outputDir`: RustBuffer.ByValue,`keepFreeBytes`: Long,`keepArchive`: Byte,`password`: RustBuffer.ByValue,`listener`: Long,uniffi_out_err: UniffiRustCallStatus, 
 ): Unit
 fun uniffi_hatchzip_android_fn_func_find_interrupted_jobs(`directory`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
 ): RustBuffer.ByValue
@@ -1015,10 +1018,10 @@ private fun uniffiCheckContractApiVersion(lib: IntegrityCheckingUniffiLib) {
 }
 @Suppress("UNUSED_PARAMETER")
 private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
-    if (lib.uniffi_hatchzip_android_checksum_func_check_archive() != 26661.toShort()) {
+    if (lib.uniffi_hatchzip_android_checksum_func_check_archive() != 52620.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_hatchzip_android_checksum_func_extract_archive() != 5526.toShort()) {
+    if (lib.uniffi_hatchzip_android_checksum_func_extract_archive() != 40575.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_hatchzip_android_checksum_func_find_interrupted_jobs() != 10759.toShort()) {
@@ -1033,25 +1036,28 @@ private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
     if (lib.uniffi_hatchzip_android_checksum_func_restore_archive() != 59588.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_hatchzip_android_checksum_method_cancellationtoken_cancel() != 30972.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_hatchzip_android_checksum_method_cancellationtoken_is_cancelled() != 40621.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_hatchzip_android_checksum_method_extractionhandle_cancel() != 63465.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_hatchzip_android_checksum_method_extractionhandle_is_cancelled() != 53691.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_hatchzip_android_checksum_method_extractionhandle_token() != 53332.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_hatchzip_android_checksum_constructor_cancellationtoken_new() != 46522.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_hatchzip_android_checksum_constructor_extractionhandle_new() != 39902.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_hatchzip_android_checksum_method_progresscallback_on_bytes_extracted() != 61832.toShort()) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if (lib.uniffi_hatchzip_android_checksum_method_progresscallback_on_archive_shrunk() != 38890.toShort()) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if (lib.uniffi_hatchzip_android_checksum_method_progresscallback_on_phase_changed() != 47374.toShort()) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if (lib.uniffi_hatchzip_android_checksum_method_progresscallback_on_error() != 4323.toShort()) {
+    if (lib.uniffi_hatchzip_android_checksum_method_extractionprogresslistener_on_telemetry() != 27904.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
 }
@@ -1453,11 +1459,269 @@ public object FfiConverterString: FfiConverter<String, RustBuffer.ByValue> {
 //
 
 
+public interface CancellationTokenInterface {
+    
+    fun `cancel`()
+    
+    fun `isCancelled`(): kotlin.Boolean
+    
+    companion object
+}
+
+open class CancellationToken: Disposable, AutoCloseable, CancellationTokenInterface
+{
+
+    constructor(pointer: Pointer) {
+        this.pointer = pointer
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(pointer))
+    }
+
+    /**
+     * This constructor can be used to instantiate a fake object. Only used for tests. Any
+     * attempt to actually use an object constructed this way will fail as there is no
+     * connected Rust object.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    constructor(noPointer: NoPointer) {
+        this.pointer = null
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(pointer))
+    }
+    constructor() :
+        this(
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_hatchzip_android_fn_constructor_cancellationtoken_new(
+        _status)
+}
+    )
+
+    protected val pointer: Pointer?
+    protected val cleanable: UniffiCleaner.Cleanable
+
+    private val wasDestroyed = AtomicBoolean(false)
+    private val callCounter = AtomicLong(1)
+
+    override fun destroy() {
+        // Only allow a single call to this method.
+        // TODO: maybe we should log a warning if called more than once?
+        if (this.wasDestroyed.compareAndSet(false, true)) {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    @Synchronized
+    override fun close() {
+        this.destroy()
+    }
+
+    internal inline fun <R> callWithPointer(block: (ptr: Pointer) -> R): R {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        do {
+            val c = this.callCounter.get()
+            if (c == 0L) {
+                throw IllegalStateException("${this.javaClass.simpleName} object has already been destroyed")
+            }
+            if (c == Long.MAX_VALUE) {
+                throw IllegalStateException("${this.javaClass.simpleName} call counter would overflow")
+            }
+        } while (! this.callCounter.compareAndSet(c, c + 1L))
+        // Now we can safely do the method call without the pointer being freed concurrently.
+        try {
+            return block(this.uniffiClonePointer())
+        } finally {
+            // This decrement always matches the increment we performed above.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    // Use a static inner class instead of a closure so as not to accidentally
+    // capture `this` as part of the cleanable's action.
+    private class UniffiCleanAction(private val pointer: Pointer?) : Runnable {
+        override fun run() {
+            pointer?.let { ptr ->
+                uniffiRustCall { status ->
+                    UniffiLib.INSTANCE.uniffi_hatchzip_android_fn_free_cancellationtoken(ptr, status)
+                }
+            }
+        }
+    }
+
+    fun uniffiClonePointer(): Pointer {
+        return uniffiRustCall() { status ->
+            UniffiLib.INSTANCE.uniffi_hatchzip_android_fn_clone_cancellationtoken(pointer!!, status)
+        }
+    }
+
+    override fun `cancel`()
+        = 
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_hatchzip_android_fn_method_cancellationtoken_cancel(
+        it, _status)
+}
+    }
+    
+    
+
+    override fun `isCancelled`(): kotlin.Boolean {
+            return FfiConverterBoolean.lift(
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_hatchzip_android_fn_method_cancellationtoken_is_cancelled(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    
+
+    
+    
+    companion object
+    
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeCancellationToken: FfiConverter<CancellationToken, Pointer> {
+
+    override fun lower(value: CancellationToken): Pointer {
+        return value.uniffiClonePointer()
+    }
+
+    override fun lift(value: Pointer): CancellationToken {
+        return CancellationToken(value)
+    }
+
+    override fun read(buf: ByteBuffer): CancellationToken {
+        // The Rust code always writes pointers as 8 bytes, and will
+        // fail to compile if they don't fit.
+        return lift(Pointer(buf.getLong()))
+    }
+
+    override fun allocationSize(value: CancellationToken) = 8UL
+
+    override fun write(value: CancellationToken, buf: ByteBuffer) {
+        // The Rust code always expects pointers written as 8 bytes,
+        // and will fail to compile if they don't fit.
+        buf.putLong(Pointer.nativeValue(lower(value)))
+    }
+}
+
+
+// This template implements a class for working with a Rust struct via a Pointer/Arc<T>
+// to the live Rust struct on the other side of the FFI.
+//
+// Each instance implements core operations for working with the Rust `Arc<T>` and the
+// Kotlin Pointer to work with the live Rust struct on the other side of the FFI.
+//
+// There's some subtlety here, because we have to be careful not to operate on a Rust
+// struct after it has been dropped, and because we must expose a public API for freeing
+// theq Kotlin wrapper object in lieu of reliable finalizers. The core requirements are:
+//
+//   * Each instance holds an opaque pointer to the underlying Rust struct.
+//     Method calls need to read this pointer from the object's state and pass it in to
+//     the Rust FFI.
+//
+//   * When an instance is no longer needed, its pointer should be passed to a
+//     special destructor function provided by the Rust FFI, which will drop the
+//     underlying Rust struct.
+//
+//   * Given an instance, calling code is expected to call the special
+//     `destroy` method in order to free it after use, either by calling it explicitly
+//     or by using a higher-level helper like the `use` method. Failing to do so risks
+//     leaking the underlying Rust struct.
+//
+//   * We can't assume that calling code will do the right thing, and must be prepared
+//     to handle Kotlin method calls executing concurrently with or even after a call to
+//     `destroy`, and to handle multiple (possibly concurrent!) calls to `destroy`.
+//
+//   * We must never allow Rust code to operate on the underlying Rust struct after
+//     the destructor has been called, and must never call the destructor more than once.
+//     Doing so may trigger memory unsafety.
+//
+//   * To mitigate many of the risks of leaking memory and use-after-free unsafety, a `Cleaner`
+//     is implemented to call the destructor when the Kotlin object becomes unreachable.
+//     This is done in a background thread. This is not a panacea, and client code should be aware that
+//      1. the thread may starve if some there are objects that have poorly performing
+//     `drop` methods or do significant work in their `drop` methods.
+//      2. the thread is shared across the whole library. This can be tuned by using `android_cleaner = true`,
+//         or `android = true` in the [`kotlin` section of the `uniffi.toml` file](https://mozilla.github.io/uniffi-rs/kotlin/configuration.html).
+//
+// If we try to implement this with mutual exclusion on access to the pointer, there is the
+// possibility of a race between a method call and a concurrent call to `destroy`:
+//
+//    * Thread A starts a method call, reads the value of the pointer, but is interrupted
+//      before it can pass the pointer over the FFI to Rust.
+//    * Thread B calls `destroy` and frees the underlying Rust struct.
+//    * Thread A resumes, passing the already-read pointer value to Rust and triggering
+//      a use-after-free.
+//
+// One possible solution would be to use a `ReadWriteLock`, with each method call taking
+// a read lock (and thus allowed to run concurrently) and the special `destroy` method
+// taking a write lock (and thus blocking on live method calls). However, we aim not to
+// generate methods with any hidden blocking semantics, and a `destroy` method that might
+// block if called incorrectly seems to meet that bar.
+//
+// So, we achieve our goals by giving each instance an associated `AtomicLong` counter to track
+// the number of in-flight method calls, and an `AtomicBoolean` flag to indicate whether `destroy`
+// has been called. These are updated according to the following rules:
+//
+//    * The initial value of the counter is 1, indicating a live object with no in-flight calls.
+//      The initial value for the flag is false.
+//
+//    * At the start of each method call, we atomically check the counter.
+//      If it is 0 then the underlying Rust struct has already been destroyed and the call is aborted.
+//      If it is nonzero them we atomically increment it by 1 and proceed with the method call.
+//
+//    * At the end of each method call, we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+//    * When `destroy` is called, we atomically flip the flag from false to true.
+//      If the flag was already true we silently fail.
+//      Otherwise we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+// Astute readers may observe that this all sounds very similar to the way that Rust's `Arc<T>` works,
+// and indeed it is, with the addition of a flag to guard against multiple calls to `destroy`.
+//
+// The overall effect is that the underlying Rust struct is destroyed only when `destroy` has been
+// called *and* all in-flight method calls have completed, avoiding violating any of the expectations
+// of the underlying Rust code.
+//
+// This makes a cleaner a better alternative to _not_ calling `destroy()` as
+// and when the object is finished with, but the abstraction is not perfect: if the Rust object's `drop`
+// method is slow, and/or there are many objects to cleanup, and it's on a low end Android device, then the cleaner
+// thread may be starved, and the app will leak memory.
+//
+// In this case, `destroy`ing manually may be a better solution.
+//
+// The cleaner can live side by side with the manual calling of `destroy`. In the order of responsiveness, uniffi objects
+// with Rust peers are reclaimed:
+//
+// 1. By calling the `destroy` method of the object, which calls `rustObject.free()`. If that doesn't happen:
+// 2. When the object becomes unreachable, AND the Cleaner thread gets to call `rustObject.free()`. If the thread is starved then:
+// 3. The memory is reclaimed when the process terminates.
+//
+// [1] https://stackoverflow.com/questions/24376768/can-java-finalize-an-object-when-it-is-still-in-scope/24380219
+//
+
+
 public interface ExtractionHandleInterface {
     
     fun `cancel`()
     
     fun `isCancelled`(): kotlin.Boolean
+    
+    fun `token`(): CancellationToken
     
     companion object
 }
@@ -1574,6 +1838,18 @@ open class ExtractionHandle: Disposable, AutoCloseable, ExtractionHandleInterfac
     }
     
 
+    override fun `token`(): CancellationToken {
+            return FfiConverterTypeCancellationToken.lift(
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_hatchzip_android_fn_method_extractionhandle_token(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
     
 
     
@@ -1668,6 +1944,66 @@ public object FfiConverterTypeArchiveInfo: FfiConverterRustBuffer<ArchiveInfo> {
 
 
 
+data class ExtractionTelemetry (
+    var `phase`: ExtractionPhase, 
+    var `currentEntryName`: kotlin.String, 
+    var `entriesCompleted`: kotlin.ULong, 
+    var `entriesTotal`: kotlin.ULong, 
+    var `bytesHatched`: kotlin.ULong, 
+    var `bytesUncompressedTotal`: kotlin.ULong, 
+    var `bytesBatchStaged`: kotlin.ULong, 
+    var `bytesArchiveReclaimed`: kotlin.ULong, 
+    var `bytesArchiveInitial`: kotlin.ULong
+) {
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeExtractionTelemetry: FfiConverterRustBuffer<ExtractionTelemetry> {
+    override fun read(buf: ByteBuffer): ExtractionTelemetry {
+        return ExtractionTelemetry(
+            FfiConverterTypeExtractionPhase.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: ExtractionTelemetry) = (
+            FfiConverterTypeExtractionPhase.allocationSize(value.`phase`) +
+            FfiConverterString.allocationSize(value.`currentEntryName`) +
+            FfiConverterULong.allocationSize(value.`entriesCompleted`) +
+            FfiConverterULong.allocationSize(value.`entriesTotal`) +
+            FfiConverterULong.allocationSize(value.`bytesHatched`) +
+            FfiConverterULong.allocationSize(value.`bytesUncompressedTotal`) +
+            FfiConverterULong.allocationSize(value.`bytesBatchStaged`) +
+            FfiConverterULong.allocationSize(value.`bytesArchiveReclaimed`) +
+            FfiConverterULong.allocationSize(value.`bytesArchiveInitial`)
+    )
+
+    override fun write(value: ExtractionTelemetry, buf: ByteBuffer) {
+            FfiConverterTypeExtractionPhase.write(value.`phase`, buf)
+            FfiConverterString.write(value.`currentEntryName`, buf)
+            FfiConverterULong.write(value.`entriesCompleted`, buf)
+            FfiConverterULong.write(value.`entriesTotal`, buf)
+            FfiConverterULong.write(value.`bytesHatched`, buf)
+            FfiConverterULong.write(value.`bytesUncompressedTotal`, buf)
+            FfiConverterULong.write(value.`bytesBatchStaged`, buf)
+            FfiConverterULong.write(value.`bytesArchiveReclaimed`, buf)
+            FfiConverterULong.write(value.`bytesArchiveInitial`, buf)
+    }
+}
+
+
+
 data class SpacePlanResult (
     var `freeBytes`: kotlin.ULong, 
     var `neededBytes`: kotlin.ULong, 
@@ -1730,19 +2066,22 @@ public object FfiConverterTypeSpacePlanResult: FfiConverterRustBuffer<SpacePlanR
 
 sealed class ExtractionPhase {
     
-    object Checking : ExtractionPhase()
+    object ScanningIndex : ExtractionPhase()
     
     
-    object Planning : ExtractionPhase()
+    object DecodingEntry : ExtractionPhase()
     
     
-    object Extracting : ExtractionPhase()
+    object FlushingFsync : ExtractionPhase()
+    
+    
+    object TruncatingTail : ExtractionPhase()
+    
+    
+    object Completed : ExtractionPhase()
     
     
     object Paused : ExtractionPhase()
-    
-    
-    object Finished : ExtractionPhase()
     
     
     data class Failed(
@@ -1761,12 +2100,13 @@ sealed class ExtractionPhase {
 public object FfiConverterTypeExtractionPhase : FfiConverterRustBuffer<ExtractionPhase>{
     override fun read(buf: ByteBuffer): ExtractionPhase {
         return when(buf.getInt()) {
-            1 -> ExtractionPhase.Checking
-            2 -> ExtractionPhase.Planning
-            3 -> ExtractionPhase.Extracting
-            4 -> ExtractionPhase.Paused
-            5 -> ExtractionPhase.Finished
-            6 -> ExtractionPhase.Failed(
+            1 -> ExtractionPhase.ScanningIndex
+            2 -> ExtractionPhase.DecodingEntry
+            3 -> ExtractionPhase.FlushingFsync
+            4 -> ExtractionPhase.TruncatingTail
+            5 -> ExtractionPhase.Completed
+            6 -> ExtractionPhase.Paused
+            7 -> ExtractionPhase.Failed(
                 FfiConverterString.read(buf),
                 )
             else -> throw RuntimeException("invalid enum value, something is very wrong!!")
@@ -1774,31 +2114,37 @@ public object FfiConverterTypeExtractionPhase : FfiConverterRustBuffer<Extractio
     }
 
     override fun allocationSize(value: ExtractionPhase) = when(value) {
-        is ExtractionPhase.Checking -> {
+        is ExtractionPhase.ScanningIndex -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
                 4UL
             )
         }
-        is ExtractionPhase.Planning -> {
+        is ExtractionPhase.DecodingEntry -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
                 4UL
             )
         }
-        is ExtractionPhase.Extracting -> {
+        is ExtractionPhase.FlushingFsync -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+        is ExtractionPhase.TruncatingTail -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+        is ExtractionPhase.Completed -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
                 4UL
             )
         }
         is ExtractionPhase.Paused -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
-                4UL
-            )
-        }
-        is ExtractionPhase.Finished -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
                 4UL
@@ -1815,28 +2161,32 @@ public object FfiConverterTypeExtractionPhase : FfiConverterRustBuffer<Extractio
 
     override fun write(value: ExtractionPhase, buf: ByteBuffer) {
         when(value) {
-            is ExtractionPhase.Checking -> {
+            is ExtractionPhase.ScanningIndex -> {
                 buf.putInt(1)
                 Unit
             }
-            is ExtractionPhase.Planning -> {
+            is ExtractionPhase.DecodingEntry -> {
                 buf.putInt(2)
                 Unit
             }
-            is ExtractionPhase.Extracting -> {
+            is ExtractionPhase.FlushingFsync -> {
                 buf.putInt(3)
                 Unit
             }
-            is ExtractionPhase.Paused -> {
+            is ExtractionPhase.TruncatingTail -> {
                 buf.putInt(4)
                 Unit
             }
-            is ExtractionPhase.Finished -> {
+            is ExtractionPhase.Completed -> {
                 buf.putInt(5)
                 Unit
             }
-            is ExtractionPhase.Failed -> {
+            is ExtractionPhase.Paused -> {
                 buf.putInt(6)
+                Unit
+            }
+            is ExtractionPhase.Failed -> {
+                buf.putInt(7)
                 FfiConverterString.write(value.`message`, buf)
                 Unit
             }
@@ -1876,6 +2226,22 @@ sealed class HatchZipException: kotlin.Exception() {
             get() = "detail=${ `detail` }"
     }
     
+    class PasswordRequired(
+        
+        val `detail`: kotlin.String
+        ) : HatchZipException() {
+        override val message
+            get() = "detail=${ `detail` }"
+    }
+    
+    class InvalidPassword(
+        
+        val `detail`: kotlin.String
+        ) : HatchZipException() {
+        override val message
+            get() = "detail=${ `detail` }"
+    }
+    
     class Cancelled(
         ) : HatchZipException() {
         override val message
@@ -1907,7 +2273,13 @@ public object FfiConverterTypeHatchZipError : FfiConverterRustBuffer<HatchZipExc
             3 -> HatchZipException.PermissionException(
                 FfiConverterString.read(buf),
                 )
-            4 -> HatchZipException.Cancelled()
+            4 -> HatchZipException.PasswordRequired(
+                FfiConverterString.read(buf),
+                )
+            5 -> HatchZipException.InvalidPassword(
+                FfiConverterString.read(buf),
+                )
+            6 -> HatchZipException.Cancelled()
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
         }
     }
@@ -1925,6 +2297,16 @@ public object FfiConverterTypeHatchZipError : FfiConverterRustBuffer<HatchZipExc
                 + FfiConverterString.allocationSize(value.`detail`)
             )
             is HatchZipException.PermissionException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`detail`)
+            )
+            is HatchZipException.PasswordRequired -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`detail`)
+            )
+            is HatchZipException.InvalidPassword -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
                 + FfiConverterString.allocationSize(value.`detail`)
@@ -1953,8 +2335,18 @@ public object FfiConverterTypeHatchZipError : FfiConverterRustBuffer<HatchZipExc
                 FfiConverterString.write(value.`detail`, buf)
                 Unit
             }
-            is HatchZipException.Cancelled -> {
+            is HatchZipException.PasswordRequired -> {
                 buf.putInt(4)
+                FfiConverterString.write(value.`detail`, buf)
+                Unit
+            }
+            is HatchZipException.InvalidPassword -> {
+                buf.putInt(5)
+                FfiConverterString.write(value.`detail`, buf)
+                Unit
+            }
+            is HatchZipException.Cancelled -> {
+                buf.putInt(6)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
@@ -1966,15 +2358,9 @@ public object FfiConverterTypeHatchZipError : FfiConverterRustBuffer<HatchZipExc
 
 
 
-public interface ProgressCallback {
+public interface ExtractionProgressListener {
     
-    fun `onBytesExtracted`(`bytes`: kotlin.ULong)
-    
-    fun `onArchiveShrunk`(`newArchiveLen`: kotlin.ULong)
-    
-    fun `onPhaseChanged`(`phase`: ExtractionPhase)
-    
-    fun `onError`(`message`: kotlin.String)
+    fun `onTelemetry`(`snapshot`: ExtractionTelemetry)
     
     companion object
 }
@@ -1982,49 +2368,13 @@ public interface ProgressCallback {
 
 
 // Put the implementation in an object so we don't pollute the top-level namespace
-internal object uniffiCallbackInterfaceProgressCallback {
-    internal object `onBytesExtracted`: UniffiCallbackInterfaceProgressCallbackMethod0 {
-        override fun callback(`uniffiHandle`: Long,`bytes`: Long,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,) {
-            val uniffiObj = FfiConverterTypeProgressCallback.handleMap.get(uniffiHandle)
+internal object uniffiCallbackInterfaceExtractionProgressListener {
+    internal object `onTelemetry`: UniffiCallbackInterfaceExtractionProgressListenerMethod0 {
+        override fun callback(`uniffiHandle`: Long,`snapshot`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeExtractionProgressListener.handleMap.get(uniffiHandle)
             val makeCall = { ->
-                uniffiObj.`onBytesExtracted`(
-                    FfiConverterULong.lift(`bytes`),
-                )
-            }
-            val writeReturn = { _: Unit -> Unit }
-            uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
-        }
-    }
-    internal object `onArchiveShrunk`: UniffiCallbackInterfaceProgressCallbackMethod1 {
-        override fun callback(`uniffiHandle`: Long,`newArchiveLen`: Long,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,) {
-            val uniffiObj = FfiConverterTypeProgressCallback.handleMap.get(uniffiHandle)
-            val makeCall = { ->
-                uniffiObj.`onArchiveShrunk`(
-                    FfiConverterULong.lift(`newArchiveLen`),
-                )
-            }
-            val writeReturn = { _: Unit -> Unit }
-            uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
-        }
-    }
-    internal object `onPhaseChanged`: UniffiCallbackInterfaceProgressCallbackMethod2 {
-        override fun callback(`uniffiHandle`: Long,`phase`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,) {
-            val uniffiObj = FfiConverterTypeProgressCallback.handleMap.get(uniffiHandle)
-            val makeCall = { ->
-                uniffiObj.`onPhaseChanged`(
-                    FfiConverterTypeExtractionPhase.lift(`phase`),
-                )
-            }
-            val writeReturn = { _: Unit -> Unit }
-            uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
-        }
-    }
-    internal object `onError`: UniffiCallbackInterfaceProgressCallbackMethod3 {
-        override fun callback(`uniffiHandle`: Long,`message`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,) {
-            val uniffiObj = FfiConverterTypeProgressCallback.handleMap.get(uniffiHandle)
-            val makeCall = { ->
-                uniffiObj.`onError`(
-                    FfiConverterString.lift(`message`),
+                uniffiObj.`onTelemetry`(
+                    FfiConverterTypeExtractionTelemetry.lift(`snapshot`),
                 )
             }
             val writeReturn = { _: Unit -> Unit }
@@ -2034,22 +2384,19 @@ internal object uniffiCallbackInterfaceProgressCallback {
 
     internal object uniffiFree: UniffiCallbackInterfaceFree {
         override fun callback(handle: Long) {
-            FfiConverterTypeProgressCallback.handleMap.remove(handle)
+            FfiConverterTypeExtractionProgressListener.handleMap.remove(handle)
         }
     }
 
-    internal var vtable = UniffiVTableCallbackInterfaceProgressCallback.UniffiByValue(
-        `onBytesExtracted`,
-        `onArchiveShrunk`,
-        `onPhaseChanged`,
-        `onError`,
+    internal var vtable = UniffiVTableCallbackInterfaceExtractionProgressListener.UniffiByValue(
+        `onTelemetry`,
         uniffiFree,
     )
 
     // Registers the foreign callback with the Rust side.
     // This method is generated for each callback interface.
     internal fun register(lib: UniffiLib) {
-        lib.uniffi_hatchzip_android_fn_init_callback_vtable_progresscallback(vtable)
+        lib.uniffi_hatchzip_android_fn_init_callback_vtable_extractionprogresslistener(vtable)
     }
 }
 
@@ -2058,7 +2405,7 @@ internal object uniffiCallbackInterfaceProgressCallback {
  *
  * @suppress
  */
-public object FfiConverterTypeProgressCallback: FfiConverterCallbackInterface<ProgressCallback>()
+public object FfiConverterTypeExtractionProgressListener: FfiConverterCallbackInterface<ExtractionProgressListener>()
 
 
 
@@ -2122,25 +2469,24 @@ public object FfiConverterSequenceString: FfiConverterRustBuffer<List<kotlin.Str
         /**
          * Pre-flight: inspect an archive without modifying disk contents.
          */
-    @Throws(HatchZipException::class) fun `checkArchive`(`path`: kotlin.String): ArchiveInfo {
+    @Throws(HatchZipException::class) fun `checkArchive`(`path`: kotlin.String, `password`: kotlin.String?): ArchiveInfo {
             return FfiConverterTypeArchiveInfo.lift(
     uniffiRustCallWithError(HatchZipException) { _status ->
     UniffiLib.INSTANCE.uniffi_hatchzip_android_fn_func_check_archive(
-        FfiConverterString.lower(`path`),_status)
+        FfiConverterString.lower(`path`),FfiConverterOptionalString.lower(`password`),_status)
 }
     )
     }
     
 
         /**
-         * Run extraction with the provided handle and progress callback.
-         * Blocks the calling thread until completed or paused/cancelled.
+         * Executes an extraction with 60 FPS throttled telemetry and password validation.
          */
-    @Throws(HatchZipException::class) fun `extractArchive`(`handle`: ExtractionHandle, `path`: kotlin.String, `outputDir`: kotlin.String?, `keepFreeBytes`: kotlin.ULong, `keepArchive`: kotlin.Boolean, `password`: kotlin.String?, `callback`: ProgressCallback)
+    @Throws(HatchZipException::class) fun `extractArchive`(`handle`: ExtractionHandle, `path`: kotlin.String, `outputDir`: kotlin.String?, `keepFreeBytes`: kotlin.ULong, `keepArchive`: kotlin.Boolean, `password`: kotlin.String?, `listener`: ExtractionProgressListener)
         = 
     uniffiRustCallWithError(HatchZipException) { _status ->
     UniffiLib.INSTANCE.uniffi_hatchzip_android_fn_func_extract_archive(
-        FfiConverterTypeExtractionHandle.lower(`handle`),FfiConverterString.lower(`path`),FfiConverterOptionalString.lower(`outputDir`),FfiConverterULong.lower(`keepFreeBytes`),FfiConverterBoolean.lower(`keepArchive`),FfiConverterOptionalString.lower(`password`),FfiConverterTypeProgressCallback.lower(`callback`),_status)
+        FfiConverterTypeExtractionHandle.lower(`handle`),FfiConverterString.lower(`path`),FfiConverterOptionalString.lower(`outputDir`),FfiConverterULong.lower(`keepFreeBytes`),FfiConverterBoolean.lower(`keepArchive`),FfiConverterOptionalString.lower(`password`),FfiConverterTypeExtractionProgressListener.lower(`listener`),_status)
 }
     
     
