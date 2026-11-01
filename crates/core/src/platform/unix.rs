@@ -16,6 +16,9 @@ pub fn same_filesystem(a: &Path, b: &Path) -> bool {
 /// (e.g. Android FUSE or FAT32/exFAT mounts not supporting locks or permissions).
 #[inline]
 pub(crate) fn is_fuse_or_unsupported(err: &io::Error) -> bool {
+    if err.kind() == io::ErrorKind::Unsupported {
+        return true;
+    }
     match err.raw_os_error() {
         Some(libc::ENOSYS | libc::EOPNOTSUPP | libc::EINVAL | libc::EACCES | libc::EPERM) => true,
         _ => false,
@@ -26,17 +29,28 @@ pub(crate) fn is_fuse_or_unsupported(err: &io::Error) -> bool {
 /// The lock is advisory, so it never gets in the way of our own readers.
 pub fn open_exclusive(path: &Path) -> io::Result<File> {
     let file = fs::OpenOptions::new().read(true).write(true).open(path)?;
-    match file.try_lock() {
-        Ok(()) => Ok(file),
-        Err(fs::TryLockError::WouldBlock) => Err(io::ErrorKind::WouldBlock.into()),
-        Err(fs::TryLockError::Error(e)) => {
-            // Android FUSE mounts (/storage/emulated/0) and FAT/exFAT SD cards
-            // do not implement flock/fcntl and return ENOSYS (38), EOPNOTSUPP (95), or EINVAL (22).
-            // The lock is advisory, so proceed without it.
-            if is_fuse_or_unsupported(&e) {
-                Ok(file)
-            } else {
-                Err(e)
+    #[cfg(target_os = "android")]
+    {
+        // On Android, advisory file locks via try_lock() or flock are either unsupported
+        // by the platform stdlib or return ENOSYS on FUSE /storage/emulated/0.
+        // Android applications operate in their own sandbox or with exclusive MANAGE_EXTERNAL_STORAGE.
+        let _ = path;
+        Ok(file)
+    }
+    #[cfg(not(target_os = "android"))]
+    {
+        match file.try_lock() {
+            Ok(()) => Ok(file),
+            Err(fs::TryLockError::WouldBlock) => Err(io::ErrorKind::WouldBlock.into()),
+            Err(fs::TryLockError::Error(e)) => {
+                // Android FUSE mounts (/storage/emulated/0) and FAT/exFAT SD cards
+                // do not implement flock/fcntl and return ENOSYS (38), EOPNOTSUPP (95), or EINVAL (22).
+                // The lock is advisory, so proceed without it.
+                if is_fuse_or_unsupported(&e) {
+                    Ok(file)
+                } else {
+                    Err(e)
+                }
             }
         }
     }

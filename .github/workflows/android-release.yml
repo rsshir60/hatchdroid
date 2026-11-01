@@ -134,11 +134,12 @@ jobs:
       - name: Extract Release Notes from Changelog
         id: notes
         run: |
-          CHANGELOG_FILE="android-app/fastlane/metadata/android/en-US/changelogs/1.txt"
-          if [ -f "$CHANGELOG_FILE" ]; then
-            echo "CHANGELOG_EXISTS=true" >> $GITHUB_OUTPUT
+          LATEST_CHANGELOG=$(ls -v android-app/fastlane/metadata/android/en-US/changelogs/*.txt 2>/dev/null | tail -n 1)
+          if [ -n "$LATEST_CHANGELOG" ] && [ -f "$LATEST_CHANGELOG" ]; then
+            echo "CHANGELOG_PATH=$LATEST_CHANGELOG" >> $GITHUB_OUTPUT
+            echo "Using changelog from: $LATEST_CHANGELOG"
           else
-            echo "CHANGELOG_EXISTS=false" >> $GITHUB_OUTPUT
+            echo "CHANGELOG_PATH=" >> $GITHUB_OUTPUT
           fi
 
       - name: Publish GitHub Release
@@ -146,7 +147,7 @@ jobs:
         with:
           tag_name: ${{ steps.vars.outputs.TAG }}
           name: "HatchDroid ${{ steps.vars.outputs.TAG }}"
-          body_path: ${{ steps.notes.outputs.CHANGELOG_EXISTS == 'true' && 'android-app/fastlane/metadata/android/en-US/changelogs/1.txt' || '' }}
+          body_path: ${{ steps.notes.outputs.CHANGELOG_PATH }}
           generate_release_notes: true
           files: |
             release_dist/HatchDroid-*.apk

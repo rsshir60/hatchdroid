@@ -1,0 +1,3 @@
+HatchDroid v0.1.1:
+- Fix: Resolve "try_lock() not supported" error on Android /storage/emulated/0 FUSE storage during extraction.
+- Improved FUSE and Scoped Storage tolerance for advisory file locks.
