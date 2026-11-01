@@ -19,7 +19,15 @@ pub const SYNC_EACH_FILE: bool = false;
 pub fn sync_batch(output: &Path) -> io::Result<()> {
     let f = File::open(output)?;
     if unsafe { libc::syncfs(f.as_raw_fd()) } != 0 {
-        return Err(io::Error::last_os_error());
+        let err = io::Error::last_os_error();
+        match err.raw_os_error() {
+            Some(libc::ENOSYS | libc::EINVAL | libc::EPERM | libc::EOPNOTSUPP) => {
+                // FUSE / Android sandbox may not implement syncfs; sync the directory descriptor directly
+                let _ = f.sync_all();
+                return Ok(());
+            }
+            _ => return Err(err),
+        }
     }
     Ok(())
 }
