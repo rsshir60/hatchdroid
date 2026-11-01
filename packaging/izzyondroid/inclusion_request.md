@@ -1,7 +1,7 @@
 # IzzyOnDroid App Inclusion Request: HatchDroid
 
-Submit this request at: **https://codeberg.org/IzzyOnDroid/repo/issues/new?template=.codeberg%2fissue_template%2fapp_inclusion.yaml**
-*(Or visit: https://codeberg.org/IzzyOnDroid/repo/issues and click **New Issue** -> **App Inclusion**)*
+Submit this request at: **https://codeberg.org/IzzyOnDroid/repodata/issues**
+*(Click **New Issue** -> select **App Inclusion Request**)*
 
 ---
 

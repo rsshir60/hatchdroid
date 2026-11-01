@@ -146,8 +146,8 @@ When you are ready to publish a new version:
 IzzyOnDroid is the most popular third-party F-Droid repository, acting as the primary launchpad for open-source Android apps.
 
 1. Once your first GitHub Release (e.g. `v0.1.0`) is published with the APK asset attached, open:
-   **https://codeberg.org/IzzyOnDroid/repo/issues/new?template=.codeberg%2fissue_template%2fapp_inclusion.yaml**
-   *(Or navigate to https://codeberg.org/IzzyOnDroid/repo/issues and click **New Issue**)*
+   **https://codeberg.org/IzzyOnDroid/repodata/issues**
+   *(Click **New Issue** -> **App Inclusion Request**)*
 2. Copy and paste the pre-filled template from:
    `packaging/izzyondroid/inclusion_request.md`
 3. Submit the issue.
