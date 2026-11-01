@@ -8,7 +8,7 @@
   *An unofficial community fork & native Android port powered by the [`hatchzip-core`](https://github.com/xevrion/hatchzip) Rust engine.*
 
   <p>
-    <a href="https://github.com/rsshir60/hatchdroid/actions"><img src="https://img.shields.io/badge/Build-Passing-2ea043?style=flat-square&logo=githubactions&logoColor=white" alt="Build Status" /></a>
+    <a href="https://github.com/rsshir60/hatchdroid/actions/workflows/android.yml"><img src="https://img.shields.io/github/actions/workflow/status/rsshir60/hatchdroid/android.yml?branch=main&style=flat-square&logo=android&label=Android%20CI" alt="Android CI" /></a>
     <a href="https://github.com/rsshir60/hatchdroid/releases"><img src="https://img.shields.io/github/v/release/rsshir60/hatchdroid?style=flat-square&logo=android&label=APK%20Release&color=3DDC84" alt="Latest Release" /></a>
     <a href="#android-app-hatchdroid"><img src="https://img.shields.io/badge/Android-API%2033%2B%20(16%20KB%20ELF)-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Android API 33+" /></a>
     <a href="https://github.com/xevrion/hatchzip"><img src="https://img.shields.io/badge/Upstream-xevrion%2Fhatchzip-f97316?style=flat-square&logo=rust&logoColor=white" alt="Upstream HatchZip" /></a>
@@ -106,6 +106,35 @@ HatchDroid pairs the memory-safe Rust `hatchzip-core` engine with a native Mater
 - 📳 **Haptic Feedback Integration:** Provides subtle haptic confirmations as extraction batches commit and physical sectors are freed.
 - 🔒 **100% Offline & Zero Telemetry:** No internet permission, no ads, no analytics SDKs, and zero network dependencies.
 
+### 🏛️ Architecture Pipeline
+
+```text
++--------------------------------------------------------------------------+
+| 🎨 Modern Android UI (Jetpack Compose 1.7 / Material 3)                 |
+| HomeScreen • ExtractionScreen • SettingsAboutScreen • PermissionScreen   |
++-----------------------------------┬--------------------------------------+
+                                    |
+                                    v
++--------------------------------------------------------------------------+
+| 📊 Telemetry & State Management                                          |
+| ExtractionViewModel • LiveProgressState • TelemetryBridge                |
+| Real-time Speed (MB/s) • ETA • 3-Phase Storage Breakdown • Haptics       |
++-----------------------------------┬--------------------------------------+
+                                    |
+                                    v
++--------------------------------------------------------------------------+
+| 🦀 JNI / UniFFI Binding Layer                                            |
+| uniffi::hatchzip_android • CancellationToken • zeroize Memory Wipe       |
++-----------------------------------┬--------------------------------------+
+                                    |
+                                    v
++--------------------------------------------------------------------------+
+| ⚙️ Native Rust Core Engine (hatchzip-core)                               |
+| In-Place Tail ftruncate • Hole-Punching fallocate • FUSE / SD Fallbacks   |
+| Compiled with 16 KB ELF Segment Alignment for Android 15+ ARM64          |
++--------------------------------------------------------------------------+
+```
+
 > [!NOTE]
 > Full Google Play Store metadata, permission rationales, and privacy declarations are documented in [`docs/play_store_listing.md`](docs/play_store_listing.md).
 
@@ -176,6 +205,9 @@ Because in-place extraction mutates the source archive, `hatchzip-core` enforces
 
 ```text
 hatchdroid/
+├── .github/workflows/      # Automated CI pipelines
+│   ├── android.yml         # 🤖 Android native build, 16 KB ELF verify, and APK artifact upload
+│   └── ci.yml              # 💻 Upstream multi-platform desktop/CLI test suite
 ├── android-app/            # Native Jetpack Compose Android Application [Fork Addition]
 │   ├── app/                # Material 3 UI, ViewModels, Foreground Service, Space Telemetry
 │   │   ├── ui/components/  # LiveExtractionTelemetryCard, PasswordPromptSheet, DualProgressCard
@@ -337,6 +369,17 @@ Android runs a userspace FUSE wrapper over `/storage/emulated/0` to manage Scope
 
 **Yes.** If your device has sufficient storage, toggle **"Keep Archive"** in HatchDroid's settings. In this mode, HatchDroid operates as a traditional, non-destructive extractor: the source archive is untouched, and full extraction space is allocated as normal.
 </details>
+
+---
+
+<a id="contributing--community"></a>
+## 🤝 Contributing & Community
+
+Contributions to HatchDroid are welcome! Whether reporting bugs on OEM Android flavors, adding localization strings, or optimizing native decompression routines:
+
+- **Reporting Issues:** If an extraction fails or behaves unexpectedly, please attach device details (Android version, device model) and the contents of any `.hatchzip` companion files generated next to the archive.
+- **Testing on Devices:** We actively verify builds across Google Pixel, Samsung Galaxy OneUI, and Xiaomi HyperOS devices running Android 13 through Android 15.
+- **Code Style:** Kotlin code follows standard Android Kotlin Style Guidelines with Jetpack Compose idioms; Rust core changes must pass `cargo fmt` and `cargo clippy`.
 
 ---
 
