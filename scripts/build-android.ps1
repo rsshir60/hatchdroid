@@ -59,7 +59,7 @@ foreach ($t in $Targets) {
 }
 
 Write-Host "Generating UniFFI Kotlin bindings..."
-cargo run -p hatchzip-android --bin uniffi-bindgen -- generate `
+cargo run -p uniffi-bindgen-runner --bin uniffi-bindgen -- generate `
     --library "$RepoRoot\target\aarch64-linux-android\$SubDir\libhatchzip_android.so" `
     --language kotlin `
     --out-dir "$RepoRoot\android-app\app\src\main\java"

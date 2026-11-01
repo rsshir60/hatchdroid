@@ -51,7 +51,7 @@ for entry in "${TARGETS[@]}"; do
 done
 
 echo "Generating UniFFI Kotlin bindings..."
-cargo run -p hatchzip-android --bin uniffi-bindgen -- generate \
+cargo run -p uniffi-bindgen-runner --bin uniffi-bindgen -- generate \
   --library "${REPO_ROOT}/target/aarch64-linux-android/${SUBDIR}/libhatchzip_android.so" \
   --language kotlin \
   --out-dir "${REPO_ROOT}/android-app/app/src/main/java"
