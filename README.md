@@ -2,27 +2,27 @@
 
   <img src="assets/icon/hatchdroid_store_icon.svg" width="128" height="128" alt="HatchDroid Logo" />
 
-  # HatchDroid & HatchZip
+  # HatchDroid
 
-  **In-place archive extraction for Android, Windows, macOS, and Linux.**<br>
-  *The archive shrinks as files hatch — eliminating the need for double free disk space.*
+  **In-place archive extraction for Android**<br>
+  *An unofficial community fork & Android port powered by the [`hatchzip-core`](https://github.com/xevrion/hatchzip) engine.*
 
   <p>
     <a href="https://github.com/rsshir60/hatchdroid/actions"><img src="https://img.shields.io/badge/Build-Passing-brightgreen?style=flat-square" alt="Build Status" /></a>
-    <a href="#license"><img src="https://img.shields.io/badge/License-MIT%20%7C%20Apache--2.0-blue?style=flat-square" alt="License" /></a>
+    <a href="#license--attribution"><img src="https://img.shields.io/badge/License-MIT%20%7C%20Apache--2.0-blue?style=flat-square" alt="License" /></a>
     <a href="#android-app-hatchdroid"><img src="https://img.shields.io/badge/Android-API%2033%2B%20(16%20KB%20Aligned)-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Android" /></a>
-    <a href="#desktop--cli-hatchzip"><img src="https://img.shields.io/badge/Platforms-Android%20%7C%20Windows%20%7C%20macOS%20%7C%20Linux-blueviolet?style=flat-square" alt="Platforms" /></a>
+    <a href="https://github.com/xevrion/hatchzip"><img src="https://img.shields.io/badge/Upstream-xevrion%2Fhatchzip-orange?style=flat-square" alt="Upstream HatchZip" /></a>
     <img src="https://img.shields.io/badge/Telemetry-100%25%20Offline-success?style=flat-square" alt="Zero Telemetry" />
     <a href="https://github.com/rsshir60/hatchdroid/stargazers"><img src="https://img.shields.io/github/stars/rsshir60/hatchdroid?style=flat-square" alt="GitHub Stars" /></a>
   </p>
 
   <h4>
+    <a href="#important-community-fork-notice">Project Notice</a> •
     <a href="#the-problem--solution">The Breakthrough</a> •
     <a href="#android-app-hatchdroid">Android App</a> •
-    <a href="#desktop--cli-hatchzip">Desktop & CLI</a> •
+    <a href="#desktop--cli-upstream-hatchzip">Desktop & CLI</a> •
     <a href="#supported-formats">Formats</a> •
     <a href="#how-in-place-extraction-works">How It Works</a> •
-    <a href="#safety-guarantees">Safety</a> •
     <a href="#building-from-source">Build from Source</a>
   </h4>
 
@@ -34,6 +34,18 @@
 
 ---
 
+## ⚠️ Important Community Fork Notice
+
+> [!IMPORTANT]
+> **Unofficial Community Fork & Android Port:**
+> This repository is an **independent community fork** maintained by [@rsshir60](https://github.com/rsshir60). We are **not** the official developers or owners of the HatchZip project.
+>
+> All credit for the invention of the in-place extraction concept, the core Rust engine (`hatchzip-core`), and the original desktop applications belongs to **[xevrion/hatchzip](https://github.com/xevrion/hatchzip)**. Please visit the official project website at **[hatchzip.dev](https://hatchzip.dev)** for official desktop builds and upstream releases.
+>
+> **Focus of this Fork:** Our work focuses solely on extending the ecosystem to mobile devices through **HatchDroid** — introducing a modern Jetpack Compose interface, Android foreground service, UniFFI / JNI bindings, and 16 KB ELF page alignment for Android 15+.
+
+---
+
 ## The Problem & Solution
 
 Traditional unarchivers (WinRAR, 7-Zip, Android system extractors) require **2x disk space**: enough space for the compressed archive **and** all uncompressed files at the same time.
@@ -41,15 +53,15 @@ Traditional unarchivers (WinRAR, 7-Zip, Android system extractors) require **2x 
 ```
 Traditional Extraction:
 [  30 GB Archive  ] + [    32 GB Unpacked Files    ] = 62 GB Peak Storage Required
-❌ On a phone/disk with only 35 GB free, extraction fails with "Not enough storage".
+❌ On a phone with only 35 GB free, extraction fails with "Not enough storage".
 
-HatchDroid / HatchZip In-Place Extraction:
+HatchDroid In-Place Extraction (powered by hatchzip-core):
 [ 15 GB Tail Cut ] ──(space reclaimed)──> [ 16 GB Written Files ]
 ✅ Unpacks progressively from the tail while shrinking the source archive.
 ✅ Peak storage required is only the uncompressed size + a tiny working buffer (~33 GB total).
 ```
 
-| Scenario | Standard Unzippers | HatchDroid / HatchZip |
+| Scenario | Standard Mobile Extractors | HatchDroid |
 |:---|:---:|:---:|
 | **30 GB game archive on 35 GB free storage** | ❌ Fails (*Out of Space*) | ✅ **Extracts smoothly** |
 | **Space reclamation** | ⏳ Reclaimed only *after* extraction finishes | ⚡ **Continuous, on-the-fly tail truncation** |
@@ -83,50 +95,31 @@ HatchDroid / HatchZip In-Place Extraction:
 
 ---
 
-## 💻 Desktop & CLI (HatchZip)
+## 💻 Desktop & CLI (Upstream HatchZip)
 
-For Windows, macOS, and Linux, the project includes both a lightweight GUI application and an ultra-fast CLI command (`hatchzip` / `hz`).
+Desktop (GUI) and command-line (CLI) tools included in this monorepo are developed and maintained upstream by **[xevrion/hatchzip](https://github.com/xevrion/hatchzip)**.
 
-### 1. Windows Explorer Integration
-- **Extract here in place:** Reclaims archive space as files unpack.
-- **Extract here (keep archive):** Runs traditional non-destructive extraction when storage is abundant.
-- **Context Menu:** Native right-click entries on Windows 10 and Windows 11.
+For official desktop downloads, installer packages (MSI, DMG, DEB, RPM, AppImage), and verification attestations, visit:
+- **Official Website:** [hatchzip.dev](https://hatchzip.dev)
+- **Official GitHub Releases:** [xevrion/hatchzip/releases](https://github.com/xevrion/hatchzip/releases)
 
-### 2. Command Line Usage
+### Upstream CLI Usage Summary
 ```sh
-# 1. Preview space plan without modifying anything
+# Preview space plan without modifying anything
 hatchzip check huge_game.zip
 
-# 2. Extract in-place (shrinks source as files hatch)
+# Extract in-place (shrinks source as files hatch)
 hatchzip extract huge_game.zip
 
-# 3. Extract to a dedicated directory
-hatchzip extract huge_game.zip -o "D:\Games\Title"
-
-# 4. Extract split archive (any volume name works)
+# Extract split archive (any volume name works)
 hatchzip x game.7z.001
 
-# 5. Extract traditionally without modifying the archive
+# Extract traditionally without modifying the archive
 hatchzip extract archive.zip --keep-archive
 
-# 6. Resume an interrupted extraction after power loss or Ctrl+C
+# Resume an interrupted extraction after power loss or Ctrl+C
 hatchzip extract huge_game.zip
-
-# 7. Restore an unfinished archive back to a standard format
-hatchzip restore huge_game.zip
 ```
-
-### CLI Options Reference
-
-| Option | Flag | Description |
-|:---|:---:|:---|
-| `--output <dir>` | `-o` | Target extraction directory (defaults to folder beside archive). |
-| `--keep-archive` | | Traditional mode: keeps archive intact (requires full output space). |
-| `--keep-free <size>` | | Minimum free space safety cushion (default `2GB`). |
-| `--replace` | | Moves existing target files to `.hatchzip-replaced` instead of refusing. |
-| `--skip-existing` | | Skips files that already exist on disk. |
-| `--verify-first` | | Reads and verifies every file's CRC-32 before truncating archive bytes. |
-| `--yes` | `-y` | Non-interactive mode (skips terminal confirmation prompts). |
 
 ---
 
@@ -147,7 +140,7 @@ hatchzip restore huge_game.zip
 ## ⚙️ How In-Place Extraction Works
 
 Traditional archives place metadata tables at either end of the file:
-1. **Reverse Ingestion:** For formats like ZIP and 7z, the central directory index is stored at the end. HatchZip reads this index and serializes a lightweight rescue state (`.hatchzip` recovery journal).
+1. **Reverse Ingestion:** For formats like ZIP and 7z, the central directory index is stored at the end. The engine reads this index and serializes a lightweight rescue state (`.hatchzip` recovery journal).
 2. **Tail-to-Head Batching:** Files located physically at the end of the archive are decoded and written to disk first.
 3. **Atomic Flush Barrier:** Each extracted file is written, flushed to the underlying hardware storage (`fsync`), and verified.
 4. **Tail Truncation:** Once a batch is safely secured on disk, the archive file is truncated (`ftruncate`) to the start offset of that batch.
@@ -179,16 +172,17 @@ Because in-place extraction modifies the source archive, the system adheres to s
 
 ```
 hatchdroid/
-├── android-app/            # Modern Jetpack Compose Android application
+├── android-app/            # Modern Jetpack Compose Android application (Fork Addition)
 │   ├── app/                # UI, ViewModel, Foreground Service, Storage Telemetry
-│   └── gradle/             # Kotlin Gradle DSL build configuration
+│   ├── gradle/             # Kotlin Gradle DSL build configuration
+│   └── scripts/            # Automated 16 KB alignment & release packaging pipeline
 ├── crates/
-│   ├── android/            # UniFFI bridge exposing Rust core to Kotlin/JNI
-│   ├── core/               # In-place extraction engine (hatchzip-core)
-│   ├── cli/                # Command-line interface
-│   ├── gui/                # Desktop user interface
-│   ├── shell/              # Windows Explorer context menu extension
-│   └── uniffi-bindgen/     # UniFFI code generation toolchain
+│   ├── android/            # UniFFI bridge exposing Rust core to Kotlin/JNI (Fork Addition)
+│   ├── uniffi-bindgen/     # UniFFI code generation toolchain (Fork Addition)
+│   ├── core/               # Upstream in-place extraction engine (hatchzip-core)
+│   ├── cli/                # Upstream command-line interface
+│   ├── gui/                # Upstream desktop user interface
+│   └── shell/              # Upstream Windows Explorer context menu extension
 ├── docs/                   # Deep dives, format notes, and Play Store metadata
 ├── scripts/                # Automated cross-compilation build scripts
 └── assets/                 # Icons and visual media
@@ -203,7 +197,7 @@ hatchdroid/
 - **Android SDK & NDK (for Android build):** NDK r27+ installed via Android Studio or command-line tools.
 - **JDK:** Java 21+
 
-### 1. Build Android Native Libraries & App
+### 1. Build Android Native Libraries & App (HatchDroid)
 Run the automated build script to cross-compile the Rust core with 16 KB ELF alignment and compile the APK:
 
 **On Windows (PowerShell):**
@@ -223,7 +217,7 @@ cd android-app
 ./gradlew assembleRelease
 ```
 
-### 2. Build Desktop & CLI Tools
+### 2. Build Desktop & CLI Tools (Upstream HatchZip)
 ```bash
 # Build CLI and Desktop GUI
 cargo build --release
@@ -241,15 +235,14 @@ This project is open-source under dual licensing:
 - **[Apache License, Version 2.0](LICENSE-APACHE)**
 - **[MIT License](LICENSE-MIT)**
 
-You may choose either license at your option.
-
-### Attribution
-- HatchDroid is built on the open-source **`hatchzip-core`** engine originally authored by [xevrion](https://github.com/xevrion/hatchzip).
-- RAR archive extraction incorporates the UnRAR library under its respective [freeware license](LICENSE-UNRAR).
+### Upstream Project Attribution & Acknowledgments
+- **Original Engine & Desktop Architecture:** The in-place extraction engine (`hatchzip-core`), algorithm, and desktop applications were created and are actively maintained by **[xevrion](https://github.com/xevrion)** in the **[hatchzip](https://github.com/xevrion/hatchzip)** repository ([hatchzip.dev](https://hatchzip.dev)).
+- **HatchDroid (This Fork):** An unofficial community port created by [@rsshir60](https://github.com/rsshir60) to bring `hatchzip-core` to Android.
+- **UnRAR:** RAR archive extraction incorporates the UnRAR library under its respective [freeware license](LICENSE-UNRAR).
 
 ---
 
 <div align="center">
   <b>⭐ Star this repo if it saved your disk space!</b><br>
-  Contributions, issues, and feature suggestions are always welcome.
+  Check out the original upstream project at <a href="https://github.com/xevrion/hatchzip">xevrion/hatchzip</a>.
 </div>

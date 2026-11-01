@@ -54,8 +54,8 @@ BUILT FOR MODERN ANDROID (ANDROID 15+ READY)
 • Runs long extractions inside a Foreground Service with live dual-bar progress notifications (watch your archive shrink while your output folder grows).
 • Zero ads, zero telemetry, 100% offline operation.
 
-OPEN SOURCE ATTRIBUTION
-HatchDroid is built on the open-source hatchzip-core library (Apache-2.0 License).
+OPEN SOURCE ATTRIBUTION & DISCLAIMER
+HatchDroid is an independent community Android client powered by the open-source hatchzip-core engine created by xevrion (Apache-2.0 / MIT License). We are not affiliated with or endorsed by the official HatchZip project. Official desktop project: https://hatchzip.dev
 ```
 
 ---

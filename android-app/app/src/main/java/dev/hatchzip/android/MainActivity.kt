@@ -22,30 +22,31 @@ class MainActivity : ComponentActivity() {
 
     private val viewModel: ExtractionViewModel by viewModels()
 
+    // Hoisted to class level so onResume() can write it and trigger Compose recomposition.
+    private val hasPermission = mutableStateOf(false)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Android 15 mandatory edge-to-edge layout
         enableEdgeToEdge()
+
+        // Initialise before setContent so the first frame is correct.
+        hasPermission.value = PermissionUtil.hasAllFilesAccess()
 
         handleIncomingArchiveIntent(intent)
 
         setContent {
             HatchZipTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    var hasPermission by remember { mutableStateOf(PermissionUtil.hasAllFilesAccess()) }
+                    val permissionGranted by hasPermission
                     var currentScreen by remember { mutableStateOf("home") }
 
                     val uiState by viewModel.uiState.collectAsState()
 
-                    // Resume lifecycle checks for permission
-                    LaunchedEffect(Unit) {
-                        hasPermission = PermissionUtil.hasAllFilesAccess()
-                    }
-
-                    if (!hasPermission) {
+                    if (!permissionGranted) {
                         PermissionScreen(
                             onPermissionGranted = {
-                                hasPermission = true
+                                hasPermission.value = true
                                 viewModel.scanStorage()
                                 viewModel.loadDirectory(File("/storage/emulated/0"))
                             }
@@ -87,7 +88,15 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (PermissionUtil.hasAllFilesAccess()) {
+        // Re-check every time the user returns to the app (e.g. from Settings grant screen).
+        val granted = PermissionUtil.hasAllFilesAccess()
+        if (granted && !hasPermission.value) {
+            // Permission was just granted — update state so Compose navigates away from
+            // PermissionScreen on the next recomposition.
+            hasPermission.value = true
+            viewModel.loadDirectory(File("/storage/emulated/0"))
+        }
+        if (granted) {
             viewModel.scanStorage()
             viewModel.detectInterruptedArchives()
         }
