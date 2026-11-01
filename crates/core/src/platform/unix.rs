@@ -12,6 +12,16 @@ pub fn same_filesystem(a: &Path, b: &Path) -> bool {
     }
 }
 
+/// Returns true if an OS error indicates a filesystem limitation rather than a hard failure
+/// (e.g. Android FUSE or FAT32/exFAT mounts not supporting locks or permissions).
+#[inline]
+fn is_fuse_or_unsupported(err: &io::Error) -> bool {
+    match err.raw_os_error() {
+        Some(libc::ENOSYS | libc::EOPNOTSUPP | libc::EINVAL | libc::EACCES | libc::EPERM) => true,
+        _ => false,
+    }
+}
+
 /// Opens the archive for writing and makes sure no other HatchZip run has it.
 /// The lock is advisory, so it never gets in the way of our own readers.
 pub fn open_exclusive(path: &Path) -> io::Result<File> {
@@ -19,7 +29,16 @@ pub fn open_exclusive(path: &Path) -> io::Result<File> {
     match file.try_lock() {
         Ok(()) => Ok(file),
         Err(fs::TryLockError::WouldBlock) => Err(io::ErrorKind::WouldBlock.into()),
-        Err(fs::TryLockError::Error(e)) => Err(e),
+        Err(fs::TryLockError::Error(e)) => {
+            // Android FUSE mounts (/storage/emulated/0) and FAT/exFAT SD cards
+            // do not implement flock/fcntl and return ENOSYS (38), EOPNOTSUPP (95), or EINVAL (22).
+            // The lock is advisory, so proceed without it.
+            if is_fuse_or_unsupported(&e) {
+                Ok(file)
+            } else {
+                Err(e)
+            }
+        }
     }
 }
 
@@ -77,13 +96,34 @@ pub fn path_len(path: &Path) -> usize {
 }
 
 pub fn sync_dir(dir: &Path) -> io::Result<()> {
-    File::open(dir)?.sync_all()
+    if let Ok(f) = File::open(dir) {
+        if let Err(e) = f.sync_all() {
+            match e.raw_os_error() {
+                // Some FUSE drivers return EBADF, EINVAL, or ENOSYS on fsync of a read-only directory
+                Some(libc::EBADF | libc::EINVAL | libc::ENOSYS | libc::EOPNOTSUPP | libc::EACCES | libc::EPERM) => Ok(()),
+                _ => Err(e),
+            }
+        } else {
+            Ok(())
+        }
+    } else {
+        Ok(())
+    }
 }
 
 /// Never recreate setuid, setgid or sticky bits from an archive.
 pub fn apply_mode(file: &File, mode: Option<u32>) -> io::Result<()> {
     match mode {
-        Some(mode) => file.set_permissions(fs::Permissions::from_mode(mode & 0o777)),
+        Some(mode) => match file.set_permissions(fs::Permissions::from_mode(mode & 0o777)) {
+            Ok(()) => Ok(()),
+            Err(e) => {
+                if is_fuse_or_unsupported(&e) {
+                    Ok(())
+                } else {
+                    Err(e)
+                }
+            }
+        },
         None => Ok(()),
     }
 }
