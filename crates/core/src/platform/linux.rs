@@ -3,6 +3,7 @@ use std::io;
 use std::os::fd::AsRawFd;
 use std::path::Path;
 
+#[cfg(not(target_os = "android"))]
 use super::unix::is_fuse_or_unsupported;
 pub use super::unix::{
     allocated_bytes, apply_mode, create_new_no_follow, create_symlink, name_problem,
