@@ -1,4 +1,11 @@
-# The Visual C++ runtime is linked into the program on Windows, so it runs on
+# Static CRT on MSVC ensures the binary runs on any 64-bit Windows, even
 # a fresh install that never had the redistributable.
 [target.'cfg(all(windows, target_env = "msvc"))']
 rustflags = ["-C", "target-feature=+crt-static"]
+
+# Android 15+ 16 KB ELF memory page size alignment
+[target.aarch64-linux-android]
+rustflags = ["-C", "link-arg=-Wl,-z,max-page-size=16384"]
+
+[target.x86_64-linux-android]
+rustflags = ["-C", "link-arg=-Wl,-z,max-page-size=16384"]

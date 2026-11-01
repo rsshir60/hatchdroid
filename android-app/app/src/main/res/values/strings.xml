@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">HatchDroid</string>
+    <string name="app_tagline">In-Place Archive Extractor</string>
+    <string name="grant_permission">Grant All Files Access</string>
+    <string name="permission_description">HatchDroid requires All Files Access to extract large archives directly in place, shrinking the archive on disk as files hatch out so you never run out of storage.</string>
+    <string name="resume_title">Interrupted Extraction Found</string>
+    <string name="resume_description">An interrupted extraction was found. Tap to resume safely with zero data loss.</string>
+    <string name="resume_button">Resume Extraction</string>
+    <string name="restore_button">Restore Archive</string>
+    <string name="pre_flight_title">Pre-Flight Space Plan</string>
+    <string name="in_place_mode">In-Place Hatch (Reclaim Space)</string>
+    <string name="normal_mode">Normal Extract (Keep Archive)</string>
+    <string name="pause_save">Pause &amp; Save State</string>
+    <string name="cancel_operation">Cancel</string>
+    <string name="notification_channel_name">HatchDroid Extractions</string>
+    <string name="notification_channel_desc">Shows progress of ongoing archive extractions</string>
+</resources>

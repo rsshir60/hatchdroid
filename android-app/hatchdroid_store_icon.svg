@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#1E293B" />
+    </linearGradient>
+    <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34D399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="rustGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FB923C" />
+      <stop offset="100%" stop-color="#EA580C" />
+    </linearGradient>
+  </defs>
+
+  <!-- Full Square Opaque Background (Google Play masks corners automatically) -->
+  <rect width="108" height="108" fill="url(#bgGrad)" />
+
+  <!-- Subtle Storage Grid Accent -->
+  <path d="M0 36 H108 M0 72 H108 M36 0 V108 M72 0 V108" stroke="#334155" stroke-width="0.5" opacity="0.35" />
+
+  <!-- SAFE ZONE (21 to 87): Top Hatched Shell + Upward Extraction Arrow (Emerald) -->
+  <path d="M54 24 L76 36 L76 47 L58 47 L58 39 L64 39 L54 29 L44 39 L50 39 L50 47 L32 47 L32 36 Z" fill="url(#emeraldGrad)" />
+
+  <!-- Zipper Teeth in the Cracking Gap -->
+  <rect x="36" y="51" width="6" height="4" rx="1" fill="#E2E8F0" />
+  <rect x="46" y="53" width="6" height="4" rx="1" fill="#94A3B8" />
+  <rect x="56" y="51" width="6" height="4" rx="1" fill="#E2E8F0" />
+  <rect x="66" y="53" width="6" height="4" rx="1" fill="#94A3B8" />
+
+  <!-- Bottom Shrinking Archive Shell (Rust Orange) -->
+  <path d="M32 60 L76 60 L76 70 L54 83 L32 70 Z" fill="url(#rustGrad)" />
+
+  <!-- Shrinking Byte Blocks Indicator Inside Bottom Shell -->
+  <rect x="44" y="65" width="20" height="3.5" rx="1.5" fill="#FFF7ED" opacity="0.9" />
+  <rect x="48" y="71" width="12" height="3.5" rx="1.5" fill="#FED7AA" opacity="0.75" />
+</svg>

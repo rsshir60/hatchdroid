@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/core", "crates/cli", "crates/shell", "crates/gui"]
+members = ["crates/core", "crates/cli", "crates/shell", "crates/gui", "crates/android", "crates/uniffi-bindgen"]
 # The fuzz targets are their own workspace, built with nightly and cargo-fuzz.
 exclude = ["fuzz"]
 
@@ -26,9 +26,11 @@ tempfile = "3.27.0"
 zip = "9"
 
 [profile.release]
-lto = "thin"
+opt-level = "z"
+lto = "fat"
 codegen-units = 1
-strip = true
+panic = "unwind"
+strip = "symbols"
 
 # Decompression in an unoptimised build is slow enough to drag the test
 # suite, and nobody steps through zstd in a debugger.

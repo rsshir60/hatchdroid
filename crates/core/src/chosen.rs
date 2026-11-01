@@ -41,7 +41,9 @@ fn dir() -> Option<PathBuf> {
         var("HOME")?.join("Library/Application Support/HatchZip")
     } else {
         var("XDG_STATE_HOME")
-            .or_else(|| Some(var("HOME")?.join(".local/state")))?
+            .or_else(|| var("HOME").map(|h| h.join(".local/state")))
+            .or_else(|| var("TMPDIR"))
+            .unwrap_or_else(|| PathBuf::from("/data/local/tmp"))
             .join("hatchzip")
     };
     Some(base.join("outputs"))

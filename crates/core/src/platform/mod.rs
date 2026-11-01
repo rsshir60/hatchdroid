@@ -4,9 +4,9 @@
 #[cfg(unix)]
 mod unix;
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "android"))]
 mod linux;
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "android"))]
 pub use linux::*;
 
 #[cfg(target_os = "macos")]
@@ -19,7 +19,7 @@ mod windows;
 #[cfg(windows)]
 pub use windows::*;
 
-#[cfg(not(any(target_os = "linux", target_os = "macos", windows)))]
+#[cfg(not(any(target_os = "linux", target_os = "android", target_os = "macos", windows)))]
 compile_error!("HatchZip has no platform module for this system yet; add one in src/platform/");
 
 #[cfg(all(test, target_os = "linux"))]
