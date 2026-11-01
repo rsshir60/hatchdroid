@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
   <img src="assets/icon/hatchdroid_store_icon.svg" width="128" height="128" alt="HatchDroid Logo" />
 
@@ -18,14 +18,14 @@
   </p>
 
   <h4>
-    <a href="#important-community-fork-notice">Fork Notice</a> â€¢
-    <a href="#the-problem--solution">The Breakthrough</a> â€¢
-    <a href="#android-app-hatchdroid">Android App</a> â€¢
-    <a href="#supported-formats">Formats</a> â€¢
-    <a href="#how-in-place-extraction-works">How It Works</a> â€¢
-    <a href="#safety-guarantees">Safety</a> â€¢
-    <a href="#building-from-source">Build & Verify</a> â€¢
-    <a href="#frequently-asked-questions">FAQ</a> â€¢
+    <a href="#important-community-fork-notice">Fork Notice</a> •
+    <a href="#the-problem--solution">The Breakthrough</a> •
+    <a href="#android-app-hatchdroid">Android App</a> •
+    <a href="#supported-formats">Formats</a> •
+    <a href="#how-in-place-extraction-works">How It Works</a> •
+    <a href="#safety-guarantees">Safety</a> •
+    <a href="#building-from-source">Build & Verify</a> •
+    <a href="#frequently-asked-questions">FAQ</a> •
     <a href="#desktop--cli-upstream-hatchzip">Desktop & CLI</a>
   </h4>
 
@@ -38,7 +38,7 @@
 ---
 
 <a id="important-community-fork-notice"></a>
-## âš ï¸ Important Community Fork Notice
+## ⚠️ Important Community Fork Notice
 
 > [!IMPORTANT]
 > **Unofficial Community Fork & Android Port**
@@ -47,41 +47,41 @@
 >
 > All credit for the invention of the in-place extraction algorithm, the core Rust engine (`hatchzip-core`), and the original desktop/CLI applications belongs to **[xevrion/hatchzip](https://github.com/xevrion/hatchzip)**. Please visit **[hatchzip.dev](https://hatchzip.dev)** for official desktop builds and upstream releases.
 >
-> **Scope of This Fork:** Our work focuses exclusively on bringing the `hatchzip-core` ecosystem to Android through **HatchDroid**â€”introducing a native Jetpack Compose UI, UniFFI/JNI bindings, a dual-progress Android Foreground Service, Android FUSE / Scoped Storage resilience, and 16 KB ELF page alignment for Android 15+.
+> **Scope of This Fork:** Our work focuses exclusively on bringing the `hatchzip-core` ecosystem to Android through **HatchDroid**—introducing a native Jetpack Compose UI, UniFFI/JNI bindings, a dual-progress Android Foreground Service, Android FUSE / Scoped Storage resilience, and 16 KB ELF page alignment for Android 15+.
 
 ---
 
 <a id="the-problem--solution"></a>
-## ðŸ’¡ The Problem & Solution
+## 💡 The Problem & Solution
 
-Traditional archive extractors (WinRAR, 7-Zip, ZArchiver, Files by Google) require **2Ã— disk space** during extraction: enough room to hold the compressed archive **and** all uncompressed files simultaneously.
+Traditional archive extractors (WinRAR, 7-Zip, ZArchiver, Files by Google) require **2x disk space** during extraction: enough room to hold the compressed archive **and** all uncompressed files simultaneously.
 
 ```text
-âŒ Traditional Extraction (Requires 2Ã— Storage):
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚    30 GB Source Archive   â”‚    32 GB Unpacked Files     â”‚  => 62 GB Peak Required
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+[ Traditional Extraction (Requires 2x Storage): ]
++---------------------------+-----------------------------+
+|    30 GB Source Archive   |    32 GB Unpacked Files     |  => 62 GB Peak Required
++---------------------------+-----------------------------+
 Result on a phone with 35 GB free: FAILS ("Out of Storage Space")
 
-âœ… HatchDroid In-Place Extraction (Powered by hatchzip-core):
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”             â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚ 15 GB Carved â”‚ â”€â”€freedâ”€â”€>  â”‚    16 GB Hatched Files      â”‚  => ~33 GB Peak Required
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜             â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+[ HatchDroid In-Place Extraction (Powered by hatchzip-core): ]
++--------------+             +-----------------------------+
+| 15 GB Carved |  --freed--> |    16 GB Hatched Files      |  => ~33 GB Peak Required
++--------------+             +-----------------------------+
 Result on a phone with 35 GB free: SUCCEEDS (Source shrinks as files hatch)
 ```
 
-| Real-World Scenario | Standard Mobile Extractors | ðŸ£ HatchDroid |
+| Real-World Scenario | Standard Mobile Extractors | HatchDroid |
 |:---|:---:|:---:|
-| **30 GB archive on a phone with 35 GB free** | âŒ Fails (*Out of Space*) | âœ… **Extracts smoothly** |
-| **Disk space reclamation** | â³ Only after 100% completion | âš¡ **Continuous, real-time tail truncation** |
-| **App killed / Battery dies at 80%** | âš ï¸ Partial/corrupt files; restart from 0% | ðŸ›¡ï¸ **Instant, bit-for-bit crash-safe resume** |
-| **Disk space validation** | âŒ Writes blindly until storage hits 0 B | ðŸ” **Simulates full extraction timeline before touching disk** |
-| **Split multi-volume sets (`.001`, `.part1.rar`)** | âŒ Keeps all parts until the very end | ðŸ—‘ï¸ **Purges each volume immediately after extraction** |
+| **30 GB archive on a phone with 35 GB free** | ❌ Fails (*Out of Space*) | ✅ **Extracts smoothly** |
+| **Disk space reclamation** | ⏳ Only after 100% completion | ⚡ **Continuous, real-time tail truncation** |
+| **App killed / Battery dies at 80%** | ⚠️ Partial/corrupt files; restart from 0% | 🛡️ **Instant, bit-for-bit crash-safe resume** |
+| **Disk space validation** | ❌ Writes blindly until storage hits 0 B | 🔍 **Simulates full extraction timeline before touching disk** |
+| **Split multi-volume sets (`.001`, `.part1.rar`)** | ❌ Keeps all parts until the very end | 🗑️ **Purges each volume immediately after extraction** |
 
 ---
 
 <a id="android-app-hatchdroid"></a>
-## ðŸ“± Android App (HatchDroid)
+## 📱 Android App (HatchDroid)
 
 HatchDroid pairs the memory-safe Rust `hatchzip-core` engine with a native Material 3 Jetpack Compose interface tailored for mobile storage constraints.
 
@@ -89,16 +89,16 @@ HatchDroid pairs the memory-safe Rust `hatchzip-core` engine with a native Mater
   <img src="assets/icon/hatchdroid_store_icon.svg" width="96" height="96" alt="HatchDroid App Icon" />
 </div>
 
-### âœ¨ Key Android Capabilities
-- ðŸ—œï¸ **True In-Place Storage Reclaimer:** Truncates random-access archives from the tail via POSIX `ftruncate`, and punches sparse filesystem holes in forward-streamed `tar.gz` archives via `fallocate(FALLOC_FL_PUNCH_HOLE)`.
-- ðŸ“Š **Pre-Flight Space Telemetry:** Inspects archive headers before modifying a single byte on disk, rendering a visual Before vs. After storage bar to guarantee the extraction fits.
-- ðŸ›‘ **System Safety Buffer Enforcement:** Reserves a protected free-space floor (default 2 GB) so Android never hits zero storage or starves system SQLite databases.
-- ðŸ”” **Foreground Service with Live Dual-Progress:** Runs resiliently in the background with persistent notification telemetry tracking both directions simultaneously:
-  - ðŸ”» **Archive Reclaimed:** e.g., `24.5 GB / 30.0 GB reclaimed`
-  - ðŸ”º **Files Hatched:** e.g., `26.2 GB / 32.0 GB extracted`
-- ðŸ”„ **Crash-Proof & Resumable (`.hatchzip` Journal):** If Android force-stops the background task or the battery dies, atomic flush barriers and state checkpoints let you reopen HatchDroid and tap **Resume Safely**.
-- ðŸ§© **Android 15+ Ready (16 KB Page Alignment):** Native Rust shared libraries (`libhatchzip_android.so`) are compiled and verified with 16 KB ELF segment alignment for modern ARM64 hardware.
-- ðŸ”’ **100% Offline & Zero Telemetry:** No internet permission, no ads, no analytics SDKs, and zero network dependencies.
+### Key Android Capabilities
+- **True In-Place Storage Reclaimer:** Truncates random-access archives from the tail via POSIX `ftruncate`, and punches sparse filesystem holes in forward-streamed `tar.gz` archives via `fallocate(FALLOC_FL_PUNCH_HOLE)`.
+- **Pre-Flight Space Telemetry:** Inspects archive headers before modifying a single byte on disk, rendering a visual Before vs. After storage bar to guarantee the extraction fits.
+- **System Safety Buffer Enforcement:** Reserves a protected free-space floor (default 2 GB) so Android never hits zero storage or starves system SQLite databases.
+- **Foreground Service with Live Dual-Progress:** Runs resiliently in the background with persistent notification telemetry tracking both directions simultaneously:
+  - Archive Reclaimed: e.g., `24.5 GB / 30.0 GB reclaimed`
+  - Files Hatched: e.g., `26.2 GB / 32.0 GB extracted`
+- **Crash-Proof & Resumable (`.hatchzip` Journal):** If Android force-stops the background task or the battery dies, atomic flush barriers and state checkpoints let you reopen HatchDroid and tap **Resume Safely**.
+- **Android 15+ Ready (16 KB Page Alignment):** Native Rust shared libraries (`libhatchzip_android.so`) are compiled and verified with 16 KB ELF segment alignment for modern ARM64 hardware.
+- **100% Offline & Zero Telemetry:** No internet permission, no ads, no analytics SDKs, and zero network dependencies.
 
 > [!NOTE]
 > Full Google Play Store metadata, permission rationales, and privacy declarations are documented in [`docs/play_store_listing.md`](docs/play_store_listing.md).
@@ -106,7 +106,7 @@ HatchDroid pairs the memory-safe Rust `hatchzip-core` engine with a native Mater
 ---
 
 <a id="supported-formats"></a>
-## ðŸ“¦ Supported Formats & Reclamation Granularity
+## 📦 Supported Formats & Reclamation Granularity
 
 | Format | Compression Codecs Supported | Space Reclaimed Every | Mechanism |
 |:---|:---|:---:|:---|
@@ -121,19 +121,19 @@ HatchDroid pairs the memory-safe Rust `hatchzip-core` engine with a native Mater
 ---
 
 <a id="how-in-place-extraction-works"></a>
-## âš™ï¸ How In-Place Extraction Works
+## ⚙️ How In-Place Extraction Works
 
 Standard extractors stream from byte 0 to EOF, keeping the entire source file locked on disk until the last byte is unpacked. HatchDroid reverses the pipeline:
 
 ```mermaid
 flowchart LR
-    A["ðŸ“¦ Source Archive<br/>(Read Central Index)"] --> B["ðŸ“ Init .hatchzip<br/>Recovery Journal"]
-    B --> C["ðŸ“¤ Decode Tail Batch<br/>(Last Physical Entries)"]
-    C --> D["ðŸ’¾ Write + CRC-32<br/>+ fsync() Barrier"]
-    D --> E["âœ‚ï¸ ftruncate() Archive<br/>(Reclaim Tail Sectors)"]
+    A["Source Archive<br/>(Read Central Index)"] --> B["Init .hatchzip<br/>Recovery Journal"]
+    B --> C["Decode Tail Batch<br/>(Last Physical Entries)"]
+    C --> D["Write + CRC-32<br/>+ fsync() Barrier"]
+    D --> E["ftruncate() Archive<br/>(Reclaim Tail Sectors)"]
     E --> F{"More Entries?"}
     F -- "Yes" --> C
-    F -- "No" --> G["âœ… Extraction Complete<br/>(Source Cleanly Consumed)"]
+    F -- "No" --> G["Extraction Complete<br/>(Source Cleanly Consumed)"]
 ```
 
 1. **Reverse Ingestion:** For indexed formats (ZIP, 7z, RAR), the Central Directory lives at the end of the file. The engine parses this index first and writes a compact `.hatchzip` recovery journal to disk.
@@ -144,21 +144,21 @@ flowchart LR
 
 ```text
 Initial State:  [ Entry 1 | Entry 2 | Entry 3 | Entry 4 | Central Index ]
-Step 1:         [ Entry 1 | Entry 2 | Entry 3 ] â”€â”€> (Entry 4 written, verified & synced)
-Step 2:         [ Entry 1 | Entry 2 ]           â”€â”€> (Entry 3 written, verified & synced)
-Step 3:         [ Entry 1 ]                     â”€â”€> (Entry 2 written, verified & synced)
+Step 1:         [ Entry 1 | Entry 2 | Entry 3 ] --> (Entry 4 written, verified & synced)
+Step 2:         [ Entry 1 | Entry 2 ]           --> (Entry 3 written, verified & synced)
+Step 3:         [ Entry 1 ]                     --> (Entry 2 written, verified & synced)
 Final State:    [ Original archive cleanly consumed; 100% of files hatched on disk ]
 ```
 
 ---
 
 <a id="safety-guarantees"></a>
-## ðŸ›¡ï¸ Safety & Storage Resilience Guarantees
+## 🛡️ Safety & Storage Resilience Guarantees
 
 Because in-place extraction mutates the source archive, `hatchzip-core` enforces strict transactional invariants:
 
 - **Pre-Flight Timeline Simulation:** Computes the exact high-water mark across every single file batch before touching disk. If peak usage ever breaches `--keep-free` (default 2 GB), extraction refuses to start.
-- **Strict Write â†’ Flush â†’ Truncate Ordering:** An archive byte range is never truncated until every file inside that range is completely written, checksummed, and synced to non-volatile storage.
+- **Strict Write -> Flush -> Truncate Ordering:** An archive byte range is never truncated until every file inside that range is completely written, checksummed, and synced to non-volatile storage.
 - **Real-Time CRC-32 Integrity Checks:** Every extracted stream is verified against its header checksum on the fly. Any bit-rot or corruption halts the pipeline immediately before truncation occurs.
 - **Path Traversal & Zip-Slip Hardening:** Sanitizes relative paths (`../`), rejects absolute paths, validates symlink targets, and prevents arbitrary permission escalation.
 - **Android FUSE & External SD Card Fallbacks:** Engineered with graceful fallbacks for Android's `/storage/emulated/0` FUSE daemon and FAT32/exFAT mounts where POSIX advisory locks (`ENOSYS`), `fchmod` (`EPERM`), or `syncfs` are unsupported by the kernel driver.
@@ -166,30 +166,30 @@ Because in-place extraction mutates the source archive, `hatchzip-core` enforces
 ---
 
 <a id="monorepo-architecture"></a>
-## ðŸ—‚ï¸ Monorepo Architecture
+## 🗂️ Monorepo Architecture
 
 ```text
 hatchdroid/
-â”œâ”€â”€ android-app/            # ðŸ“± Native Jetpack Compose Android Application [Fork Addition]
-â”‚   â”œâ”€â”€ app/                # Material 3 UI, ViewModels, Foreground Service, Space Telemetry
-â”‚   â”œâ”€â”€ gradle/             # Kotlin Gradle DSL & version catalogs
-â”‚   â””â”€â”€ scripts/            # 16 KB ELF alignment verification & release signing tools
-â”œâ”€â”€ crates/
-â”‚   â”œâ”€â”€ android/            # ðŸ¦€ UniFFI + JNI bridge exposing Rust core to Kotlin [Fork Addition]
-â”‚   â”œâ”€â”€ uniffi-bindgen/     # ðŸ› ï¸ UniFFI Kotlin bindings generator [Fork Addition]
-â”‚   â”œâ”€â”€ core/               # âš™ï¸ Upstream in-place extraction engine (hatchzip-core)
-â”‚   â”œâ”€â”€ cli/                # ðŸ’» Upstream command-line interface (hatchzip)
-â”‚   â”œâ”€â”€ gui/                # ðŸ–¥ï¸ Upstream desktop GUI application
-â”‚   â””â”€â”€ shell/              # ðŸªŸ Upstream Windows Explorer context-menu extension
-â”œâ”€â”€ docs/                   # Architecture deep dives, format specs, Play Store metadata
-â”œâ”€â”€ scripts/                # Cross-compilation build scripts (PowerShell & Bash)
-â””â”€â”€ assets/                 # App icons, SVGs, and demo media
+├── android-app/            # Native Jetpack Compose Android Application [Fork Addition]
+│   ├── app/                # Material 3 UI, ViewModels, Foreground Service, Space Telemetry
+│   ├── gradle/             # Kotlin Gradle DSL & version catalogs
+│   └── scripts/            # 16 KB ELF alignment verification & release signing tools
+├── crates/
+│   ├── android/            # UniFFI + JNI bridge exposing Rust core to Kotlin [Fork Addition]
+│   ├── uniffi-bindgen/     # UniFFI Kotlin bindings generator [Fork Addition]
+│   ├── core/               # Upstream in-place extraction engine (hatchzip-core)
+│   ├── cli/                # Upstream command-line interface (hatchzip)
+│   ├── gui/                # Upstream desktop GUI application
+│   └── shell/              # Upstream Windows Explorer context-menu extension
+├── docs/                   # Architecture deep dives, format specs, Play Store metadata
+├── scripts/                # Cross-compilation build scripts (PowerShell & Bash)
+└── assets/                 # App icons, SVGs, and demo media
 ```
 
 ---
 
 <a id="building-from-source"></a>
-## ðŸ—ï¸ Building from Source
+## 🏗️ Building from Source
 
 ### Prerequisites
 - **Rust:** Stable toolchain via [rustup](https://rustup.rs/) (`aarch64-linux-android` and `x86_64-linux-android` targets)
@@ -244,13 +244,13 @@ cargo build --release --workspace --exclude hatchzip-android
 ---
 
 <a id="desktop--cli-upstream-hatchzip"></a>
-## ðŸ’» Desktop & CLI (Upstream HatchZip)
+## 💻 Desktop & CLI (Upstream HatchZip)
 
 The desktop GUI and command-line interface (`hatchzip`) included in this monorepo are authored and maintained upstream by **[xevrion/hatchzip](https://github.com/xevrion/hatchzip)**.
 
 For official prebuilt desktop installers (`.msi`, `.dmg`, `.deb`, `.rpm`, `.AppImage`) and provenance attestations:
-- ðŸŒ **Official Website:** [hatchzip.dev](https://hatchzip.dev)
-- ðŸ“¦ **Official Desktop Releases:** [github.com/xevrion/hatchzip/releases](https://github.com/xevrion/hatchzip/releases)
+- **Official Website:** [hatchzip.dev](https://hatchzip.dev)
+- **Official Desktop Releases:** [github.com/xevrion/hatchzip/releases](https://github.com/xevrion/hatchzip/releases)
 
 ```bash
 # Preview the exact storage high-water mark without modifying disk
@@ -272,7 +272,7 @@ hatchzip extract huge_game.zip
 ---
 
 <a id="frequently-asked-questions"></a>
-## â“ Frequently Asked Questions
+## ❓ Frequently Asked Questions
 
 <details>
 <summary><b>1. Why does HatchDroid require "All Files Access" (<code>MANAGE_EXTERNAL_STORAGE</code>)?</b></summary>
@@ -287,7 +287,7 @@ HatchDroid is a low-level archive management tool that operates directly on mult
 
 **No.** In fact, in-place extraction causes **equal or fewer total flash write cycles** than traditional extraction:
 - Extracted files are written sequentially to disk exactly once in both methods.
-- Truncating the archive tail via `ftruncate` only updates the file's metadata index in the filesystem inode / block allocation tableâ€”it does not overwrite the data sectors.
+- Truncating the archive tail via `ftruncate` only updates the file's metadata index in the filesystem inode / block allocation table—it does not overwrite the data sectors.
 - In-place extraction prevents Android's memory manager from thrashing low-storage swap space during tight storage conditions.
 </details>
 
@@ -302,7 +302,7 @@ Android runs a userspace FUSE wrapper over `/storage/emulated/0` to manage Scope
 <summary><b>4. What happens if the app crashes, battery dies, or Android kills the process?</b></summary>
 <br>
 
-**Your files remain completely safe.** HatchDroid maintains a two-file recovery journal (`archive.zip.hatchzip` and `archive.zip.hatchzip-tail`) holding the archive's central directory. Every file is completely extracted, verified against its CRC-32 checksum, and synced via `fsync` before the source archive is truncated. If extraction is interrupted at any moment, reopen HatchDroid and tap **Resume**â€”it will read the journal and pick up seamlessly from the exact byte where it left off.
+**Your files remain completely safe.** HatchDroid maintains a two-file recovery journal (`archive.zip.hatchzip` and `archive.zip.hatchzip-tail`) holding the archive's central directory. Every file is completely extracted, verified against its CRC-32 checksum, and synced via `fsync` before the source archive is truncated. If extraction is interrupted at any moment, reopen HatchDroid and tap **Resume**—it will read the journal and pick up seamlessly from the exact byte where it left off.
 </details>
 
 <details>
@@ -315,7 +315,7 @@ Android runs a userspace FUSE wrapper over `/storage/emulated/0` to manage Scope
 ---
 
 <a id="license--attribution"></a>
-## ðŸ“„ License & Attribution
+## 📄 License & Attribution
 
 This project is dual-licensed under your choice of:
 - **[Apache License, Version 2.0](LICENSE-APACHE)**
@@ -329,6 +329,6 @@ This project is dual-licensed under your choice of:
 ---
 
 <div align="center">
-  <b>â­ Star this repo if it saved your phone storage!</b><br>
+  <b>⭐ Star this repo if it saved your phone storage!</b><br>
   Check out the original upstream project at <a href="https://github.com/xevrion/hatchzip">xevrion/hatchzip</a>.
 </div>
